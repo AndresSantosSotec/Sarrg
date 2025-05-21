@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// src/screens/LoginScreen.tsx
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -7,24 +8,26 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../navigation/AppNavigator'; // ajusta la ruta si cambia
-
-type Navigation = NativeStackNavigationProp<RootStackParamList, 'Login'>;
+import { AuthContext } from '../contexts/AuthContext';
 
 export default function LoginScreen() {
-  const navigation = useNavigation<Navigation>();
-  const [email, setEmail] = useState('');
+  const { login } = useContext(AuthContext);
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
-    // Aquí iría tu autenticación real
-    if (email && password) {
-      // 👉 IR DIRECTO AL CONTENEDOR DE TABS
-      navigation.replace('Main');
-    } else {
-      Alert.alert('Error', 'Por favor completa los campos.');
+  const handleLogin = async () => {
+    if (!email || !password) {
+      return Alert.alert('Error', 'Por favor completa los campos.');
+    }
+    try {
+      await login(email, password);
+      // Éxito: AppNavigator detectará user != null y navegará a Main
+    } catch (err: any) {
+      console.error('❌ Login error:', err.response ?? err);
+      Alert.alert(
+        'Error',
+        err.response?.data?.message || 'No se pudo iniciar sesión'
+      );
     }
   };
 
@@ -60,13 +63,12 @@ export default function LoginScreen() {
           secureTextEntry
           style={styles.input}
         />
-
         <TouchableOpacity onPress={handleLogin} style={styles.button}>
           <Text style={styles.buttonText}>Iniciar Sesión</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Enlaces (aún sin pantallas) */}
+      {/* Enlaces */}
       <View style={styles.linksContainer}>
         <Text
           style={styles.linkText}

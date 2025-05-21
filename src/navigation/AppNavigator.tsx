@@ -1,26 +1,31 @@
-import React from 'react';
+// src/navigation/AppNavigator.tsx
+import React, { useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { AuthContext } from '../contexts/AuthContext';
 
 import LoginScreen from '../screens/LoginScreen';
-import DashboardScreen from '../screens/DashboardScreen';
-import MainTabs from './MainTabsNavigator'; // este será el contenedor con BottomNavigation
+import MainTabs    from './MainTabsNavigator';
 
 export type RootStackParamList = {
   Login: undefined;
-  Main: undefined; // contiene las tabs como Perfil, Actividad, etc.
-  Dashboard: undefined;
+  Main:  undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) return null; // o un SplashScreen
+
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Main" component={MainTabs} />
-        <Stack.Screen name="Dashboard" component={DashboardScreen} />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {user
+          ? <Stack.Screen name="Main" component={MainTabs} />
+          : <Stack.Screen name="Login" component={LoginScreen} />
+        }
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 
 export default function BottomNavigation({ state, navigation }: BottomTabBarProps) {
   const { bottom } = useSafeAreaInsets();
@@ -12,18 +13,19 @@ export default function BottomNavigation({ state, navigation }: BottomTabBarProp
         const isActive = state.index === index;
 
         /* Ícono y texto según la ruta */
-        const { icon, label } =
+        type TabInfo = { icon: any; label: any; iconType: 'fontawesome' | 'fontawesome5' };
+        const { icon, label, iconType }: TabInfo =
           route.name === 'Dashboard'
-            ? { icon: '🏠', label: 'Inicio' }
+            ? { icon: 'home', label: 'Inicio', iconType: 'fontawesome' }
             : route.name === 'Profile'
-            ? { icon: '👤', label: 'Perfil' }
+            ? { icon: 'user', label: 'Perfil', iconType: 'fontawesome' }
             : route.name === 'RegisterActivity'
-            ? { icon: '🏃‍♂️', label: 'Actividad' }
+            ? { icon: 'running', label: 'Actividad', iconType: 'fontawesome5' }
             : route.name === 'Wallet'
-            ? { icon: '⏰', label: 'Monedero' }
+            ? { icon: 'wallet', label: 'Monedero', iconType: 'fontawesome5' } // Cambiado a fontawesome5
             : route.name === 'Store'
-            ? { icon: '🛒', label: 'Tienda' }
-            : { icon: '🚪', label: 'Salir' }; // ← Logout
+            ? { icon: 'shopping-bag', label: 'Tienda', iconType: 'fontawesome' }
+            : { icon: 'sign-out', label: 'Salir', iconType: 'fontawesome' };
 
         return (
           <TouchableOpacity
@@ -32,7 +34,19 @@ export default function BottomNavigation({ state, navigation }: BottomTabBarProp
             onPress={() => navigation.navigate(route.name)}
           >
             {isActive && <View style={styles.activeIndicator} />}
-            <Text style={[styles.icon, isActive && styles.activeText]}>{icon}</Text>
+            {iconType === 'fontawesome' ? (
+              <FontAwesome 
+                name={icon} 
+                size={20} 
+                style={[styles.icon, isActive && styles.activeText]} 
+              />
+            ) : (
+              <FontAwesome5 
+                name={icon} 
+                size={20} 
+                style={[styles.icon, isActive && styles.activeText]} 
+              />
+            )}
             <Text style={[styles.label, isActive && styles.activeText]}>{label}</Text>
           </TouchableOpacity>
         );
@@ -41,6 +55,7 @@ export default function BottomNavigation({ state, navigation }: BottomTabBarProp
   );
 }
 
+// Los estilos permanecen iguales
 const styles = StyleSheet.create({
   navbar: {
     flexDirection: 'row',
@@ -62,6 +77,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    paddingVertical: 8,
   },
   activeIndicator: {
     position: 'absolute',
@@ -73,13 +89,12 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 6,
   },
   icon: {
-    fontSize: 18,
     color: '#bfdbfe',
+    marginBottom: 4,
   },
   label: {
     fontSize: 12,
     color: '#bfdbfe',
-    marginTop: 2,
   },
   activeText: {
     color: '#fff',
