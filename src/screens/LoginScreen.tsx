@@ -21,7 +21,8 @@ export default function LoginScreen() {
     }
     try {
       await login(email, password);
-      // Éxito: AppNavigator detectará user != null y navegará a Main
+      // Una vez que login() actualice el contexto, el navigator principal
+      // detectará user != null y cambiará a la pantalla principal.
     } catch (err: any) {
       console.error('❌ Login error:', err.response ?? err);
       Alert.alert(

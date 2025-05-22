@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "sargefit-app",
-    "slug": "sargefit-app",
+    "name": "coosanjerfit",
+    "slug": "coosanjerfit",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/coosanjer.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {

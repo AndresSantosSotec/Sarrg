@@ -7,9 +7,13 @@ import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 export default function BottomNavigation({ state, navigation }: BottomTabBarProps) {
   const { bottom } = useSafeAreaInsets();
 
+  // Filtrar solo las rutas que queremos mostrar (sin Profile)
+  const allowedRoutes = ['Dashboard', 'RegisterActivity', 'Logout'];
+  const filteredRoutes = state.routes.filter(route => allowedRoutes.includes(route.name));
+
   return (
     <View style={[styles.navbar, { paddingBottom: bottom, height: 64 + bottom }]}>
-      {state.routes.map((route, index) => {
+      {filteredRoutes.map((route, index) => {
         const isActive = state.index === index;
 
         /* Ícono y texto según la ruta */
@@ -17,14 +21,8 @@ export default function BottomNavigation({ state, navigation }: BottomTabBarProp
         const { icon, label, iconType }: TabInfo =
           route.name === 'Dashboard'
             ? { icon: 'home', label: 'Inicio', iconType: 'fontawesome' }
-            : route.name === 'Profile'
-            ? { icon: 'user', label: 'Perfil', iconType: 'fontawesome' }
             : route.name === 'RegisterActivity'
             ? { icon: 'running', label: 'Actividad', iconType: 'fontawesome5' }
-            : route.name === 'Wallet'
-            ? { icon: 'wallet', label: 'Monedero', iconType: 'fontawesome5' } // Cambiado a fontawesome5
-            : route.name === 'Store'
-            ? { icon: 'shopping-bag', label: 'Tienda', iconType: 'fontawesome' }
             : { icon: 'sign-out', label: 'Salir', iconType: 'fontawesome' };
 
         return (

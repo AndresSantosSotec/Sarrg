@@ -17,15 +17,19 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function AppNavigator() {
   const { user, loading } = useContext(AuthContext);
 
-  if (loading) return null; // o un SplashScreen
+  // Mientras validamos el token, podrías mostrar un SplashScreen o null
+  if (loading) {
+    return null; 
+  }
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {user
-          ? <Stack.Screen name="Main" component={MainTabs} />
-          : <Stack.Screen name="Login" component={LoginScreen} />
-        }
+        {user ? (
+          <Stack.Screen name="Main" component={MainTabs} />
+        ) : (
+          <Stack.Screen name="Login" component={LoginScreen} />
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

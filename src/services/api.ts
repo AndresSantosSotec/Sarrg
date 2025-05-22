@@ -11,16 +11,34 @@ const api = axios.create({
 
 // Interceptor para adjuntar el token en cada petición
 api.interceptors.request.use(
-  config => {
-    // Obtén el token de forma asíncrona y agrégalo cuando esté disponible
-    AsyncStorage.getItem('auth_token').then(token => {
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`
-      }
-    })
+  async config => {
+    const token = await AsyncStorage.getItem('auth_token')
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   error => Promise.reject(error)
 )
+
+/**
+ * Llama al endpoint de login, guarda el token y retorna la data completa.
+ */
+export async function login(email: string, password: string) {
+  const response = await api.post('/app/login', { email, password })
+  const { token, user } = response.data
+  // Guarda el token para futuras peticiones
+  await AsyncStorage.setItem('auth_token', token)
+  // (Opcional) Guarda también los datos del usuario
+  await AsyncStorage.setItem('user_data', JSON.stringify(user))
+  return { user }
+}
+
+/**
+ * Elimina credenciales locales para forzar logout
+ */
+export async function logout() {
+  await AsyncStorage.multiRemove(['auth_token', 'user_data'])
+}
 
 export default api
