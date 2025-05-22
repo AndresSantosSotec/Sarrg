@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert, AppState, Platform } from 'react-native';
 import { Pedometer } from 'expo-sensors';
 
 interface PedometerProps {
@@ -8,40 +8,98 @@ interface PedometerProps {
 }
 
 const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
-  const [isRunning, setIsRunning] = useState(false);
   const [pedometerAvailable, setPedometerAvailable] = useState<boolean | null>(null);
-  const [subscription, setSubscription] = useState<any>(null);
   const [goal] = useState(10000);
   const progressAnim = useState(new Animated.Value(0))[0];
+  const subscriptionRef = useRef<any>(null);
+  const appState = useRef(AppState.currentState);
+  const lastStepsRef = useRef(0);
 
-  // 1) Comprueba disponibilidad solo una vez
+  // Verificar disponibilidad y configurar el podómetro
   useEffect(() => {
-    Pedometer.isAvailableAsync()
-      .then(available => setPedometerAvailable(available))
-      .catch(() => setPedometerAvailable(false));
-  }, []);
-
-  // 2) Suscribe / desuscribe al conteo
-  useEffect(() => {
-    if (isRunning && pedometerAvailable) {
-      const sub = Pedometer.watchStepCount(result => {
-        setSteps(result.steps);
-      });
-      setSubscription(sub);
-    } else if (subscription) {
-      subscription.remove();
-      setSubscription(null);
-    }
-    // limpia al desmontar o al cambiar isRunning
-    return () => {
-      if (subscription) {
-        subscription.remove();
-        setSubscription(null);
+    const checkAvailability = async () => {
+      try {
+        const isAvailable = await Pedometer.isAvailableAsync();
+        setPedometerAvailable(isAvailable);
+        
+        if (isAvailable) {
+          // En Android solo podemos comenzar desde cero
+          if (Platform.OS === 'android') {
+            lastStepsRef.current = 0;
+            setSteps(0);
+          } else {
+            // Para iOS intentamos obtener el historial
+            try {
+              const end = new Date();
+              const start = new Date();
+              start.setHours(0, 0, 0, 0);
+              const pastSteps = await Pedometer.getStepCountAsync(start, end);
+              lastStepsRef.current = pastSteps.steps;
+              setSteps(pastSteps.steps);
+            } catch (error) {
+              console.log('No se pudo obtener historial de pasos, comenzando desde cero');
+              lastStepsRef.current = 0;
+              setSteps(0);
+            }
+          }
+          
+          startPedometer();
+        }
+      } catch (error) {
+        console.error('Error al verificar podómetro:', error);
+        setPedometerAvailable(false);
       }
     };
-  }, [isRunning, pedometerAvailable]);
 
-  // 3) Anima la barra de progreso
+    checkAvailability();
+
+    // Configurar listener para cambios en el estado de la app
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        // App vuelve a primer plano, reiniciamos el podómetro
+        startPedometer();
+      } else if (nextAppState.match(/inactive|background/)) {
+        // App va a segundo plano, detenemos el podómetro
+        stopPedometer();
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      stopPedometer();
+      subscription.remove();
+    };
+  }, []);
+
+  const startPedometer = () => {
+    if (subscriptionRef.current) return;
+    
+    // Comenzamos desde cero en cada inicio para Android
+    if (Platform.OS === 'android') {
+      lastStepsRef.current = 0;
+      setSteps(0);
+    }
+    
+    subscriptionRef.current = Pedometer.watchStepCount(result => {
+      setSteps(prevSteps => {
+        // Para Android, usamos directamente el valor del contador
+        if (Platform.OS === 'android') {
+          return result.steps;
+        }
+        // Para iOS, sumamos al historial
+        return lastStepsRef.current + result.steps;
+      });
+    });
+  };
+
+  const stopPedometer = () => {
+    if (subscriptionRef.current) {
+      subscriptionRef.current.remove();
+      subscriptionRef.current = null;
+    }
+  };
+
+  // Animar la barra de progreso
   useEffect(() => {
     const progress = Math.min(steps / goal, 1);
     Animated.timing(progressAnim, {
@@ -52,20 +110,17 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
   }, [steps]);
 
   const handleReset = () => {
-    if (subscription) {
-      subscription.remove();
-      setSubscription(null);
+    if (Platform.OS === 'android') {
+      // En Android necesitamos detener y reiniciar el podómetro para resetear
+      stopPedometer();
+      lastStepsRef.current = 0;
+      setSteps(0);
+      startPedometer();
+    } else {
+      // En iOS simplemente reiniciamos el contador
+      lastStepsRef.current = 0;
+      setSteps(0);
     }
-    setIsRunning(false);
-    setSteps(0);
-  };
-
-  const toggleRunning = () => {
-    if (pedometerAvailable === false) {
-      Alert.alert('No disponible', 'Tu dispositivo no soporta podómetro.');
-      return;
-    }
-    setIsRunning(r => !r);
   };
 
   const progressWidth = progressAnim.interpolate({
@@ -85,15 +140,6 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
       </View>
 
       <View style={styles.buttons}>
-        <TouchableOpacity
-          style={[styles.button, isRunning ? styles.stopBtn : styles.startBtn]}
-          onPress={toggleRunning}
-        >
-          <Text style={styles.buttonText}>
-            {isRunning ? 'Detener' : 'Iniciar'} conteo
-          </Text>
-        </TouchableOpacity>
-
         <TouchableOpacity style={[styles.button, styles.resetBtn]} onPress={handleReset}>
           <Text style={styles.buttonText}>Reiniciar pasos</Text>
         </TouchableOpacity>
@@ -112,14 +158,12 @@ const styles = StyleSheet.create({
   container: { gap: 12 },
   header: { flexDirection: 'row', justifyContent: 'space-between' },
   stepCount: { fontSize: 18, fontWeight: 'bold', color: '#1d4ed8' },
-  goalText:  { fontSize: 14, color: '#6b7280' },
-  progressBar:   { height: 16, backgroundColor: '#e5e7eb', borderRadius: 10, overflow: 'hidden' },
-  progressFill:  { height: '100%', backgroundColor: '#4ade80' },
-  buttons:       { flexDirection: 'row', justifyContent: 'space-between', gap: 10, marginTop: 12 },
-  button:        { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
-  startBtn:      { backgroundColor: '#3b82f6' },
-  stopBtn:       { backgroundColor: '#ef4444' },
-  resetBtn:      { backgroundColor: '#9ca3af' },
-  buttonText:    { color: 'white', fontWeight: '600' },
-  errorText:     { marginTop: 8, color: '#ef4444', textAlign: 'center' },
+  goalText: { fontSize: 14, color: '#6b7280' },
+  progressBar: { height: 16, backgroundColor: '#e5e7eb', borderRadius: 10, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: '#4ade80' },
+  buttons: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginTop: 12 },
+  button: { paddingVertical: 10, borderRadius: 8, alignItems: 'center', minWidth: 150 },
+  resetBtn: { backgroundColor: '#9ca3af' },
+  buttonText: { color: 'white', fontWeight: '600' },
+  errorText: { marginTop: 8, color: '#ef4444', textAlign: 'center' },
 });

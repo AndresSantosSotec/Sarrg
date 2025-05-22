@@ -262,7 +262,7 @@ export default function DashboardScreen() {
         {/* Footer with brand info */}
         <View style={styles.footerContainer}>
           <Text style={styles.footerText}>
-            COOSANJER - Cooperativa de Servicios San Jerónimo
+            COOSANJER - Cooperativa de ahorro y Crédito
           </Text>
           <Text style={styles.footerSubtext}>
             Sistema de Bienestar Laboral
