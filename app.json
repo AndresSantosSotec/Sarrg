@@ -4,7 +4,9 @@
     "slug": "coosanjerfit",
     "version": "1.0.0",
     "orientation": "portrait",
+
     "icon": "./assets/coosanjer.png",
+
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
 
@@ -20,7 +22,7 @@
 
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/coosanjer.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -33,8 +35,9 @@
 
     "extra": {
       "eas": {
-
+        "projectId": "f3b0853a-325f-4ecc-8794-c1af1dd60e2a"
       }
-    }
+    },
+    "owner": "andresdev2905"
   }
 }

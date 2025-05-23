@@ -69,22 +69,28 @@ export default function DashboardScreen() {
         end={{ x: 1, y: 1 }}
       >
         {/* Contenedor superior para marca y botones */}
+
+
         <View style={styles.topHeaderContainer}>
+          {/* Sección izquierda - Marca */}
           <View style={styles.brandContainer}>
             <Text style={styles.brandText}>COOSANJER</Text>
             <Text style={styles.brandSubtext}>Sistema de Bienestar</Text>
           </View>
 
-          <View style={styles.headerButtonsContainer}>
+          {/* Contenedor para CoinFits y Reload con espaciado controlado */}
+          <View style={styles.rightSection}>
+            {/* Sección CoinFits */}
             <TouchableOpacity
               style={styles.coinContainer}
               activeOpacity={0.7}
             >
-              <FontAwesome5 name="coins" size={18} color={COLORS.gold} />
+              <FontAwesome5 name="coins" size={12} color={COLORS.gold} />
               <Text style={styles.coinValue}>{collaborator.coin_fits}</Text>
-              <Text style={styles.coinLabel}>CoinFits</Text>
+              <Text style={styles.coinLabel}>CF</Text>
             </TouchableOpacity>
 
+            {/* Sección Reload */}
             <TouchableOpacity
               style={styles.headerRefreshButton}
               onPress={refreshData}
@@ -93,7 +99,7 @@ export default function DashboardScreen() {
             >
               <FontAwesome5
                 name="sync-alt"
-                size={18}
+                size={12}
                 color={COLORS.white}
                 style={loading ? styles.refreshIconLoading : null}
               />
@@ -319,12 +325,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.lightGray,
   },
+  coinInfoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   topHeaderContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 10,
     position: 'relative',
+  },
+  rightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+    minHeight: 80,
   },
   headerButtonsContainer: {
     flexDirection: 'row',
@@ -431,6 +447,15 @@ const styles = StyleSheet.create({
     minWidth: 80,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
+  },
+  coinIconWrapper: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 215, 0, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   coinValue: {
     fontSize: 16,

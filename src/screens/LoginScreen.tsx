@@ -37,7 +37,7 @@ export default function LoginScreen() {
       {/* Logo + claim */}
       <View style={styles.logoContainer}>
         <Text style={styles.title}>
-          Sanjer
+          coosanjer
           <Text style={styles.titleHighlight}>FIT</Text>
         </Text>
         <Text style={styles.subtitle}>

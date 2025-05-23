@@ -15,7 +15,7 @@ import PedometerComponent from '../components/Pedometer';
 
 export default function RegisterActivityScreen() {
   const [exerciseType, setExerciseType] = useState('Caminata + Trote Básico');
-  const [duration, setDuration] = useState('45');
+  const [duration, setDuration] = useState('0');
   const [durationUnit, setDurationUnit] = useState('minutos');
   const [intensity, setIntensity] = useState('Media');
   const [calories, setCalories] = useState('0');
@@ -24,7 +24,7 @@ export default function RegisterActivityScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [notes, setNotes] = useState('');
   const [steps, setSteps] = useState(0);
-  
+
   // Estados para modales de selección
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const [showIntensityModal, setShowIntensityModal] = useState(false);
@@ -106,7 +106,7 @@ export default function RegisterActivityScreen() {
         Alert.alert('Permiso denegado', 'Necesitamos permiso de ubicación');
         return;
       }
-      
+
       const loc = await Location.getCurrentPositionAsync({});
       setDeviceLocation(`${loc.coords.latitude.toFixed(5)}, ${loc.coords.longitude.toFixed(5)}`);
       Alert.alert('✅ Ubicación registrada', 'La ubicación se ha guardado correctamente');
@@ -206,33 +206,7 @@ export default function RegisterActivityScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Sección de Foto */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <MaterialIcons name="photo-camera" size={20} color="#3b82f6" />
-              <Text style={styles.cardTitle}>Foto de la Actividad</Text>
-            </View>
-            
-            <TouchableOpacity style={styles.photoContainer} onPress={openCamera} activeOpacity={0.8}>
-              {selfieUri ? (
-                <View style={styles.photoWrapper}>
-                  <Image source={{ uri: selfieUri }} style={styles.photo} />
-                  <View style={styles.photoOverlay}>
-                    <MaterialIcons name="edit" size={20} color="white" />
-                    <Text style={styles.photoOverlayText}>Cambiar foto</Text>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.photoPlaceholder}>
-                  <MaterialIcons name="add-a-photo" size={48} color="#3b82f6" />
-                  <Text style={styles.photoPlaceholderText}>Toca para tomar una foto</Text>
-                  <Text style={styles.photoPlaceholderSubtext}>Opcional</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          {/* Sección de Detalles */}
+          {/* 1. Sección de Detalles de la Actividad (sin calorías) */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <MaterialIcons name="assignment" size={20} color="#3b82f6" />
@@ -242,17 +216,17 @@ export default function RegisterActivityScreen() {
             {/* Selector de Ejercicio Mejorado */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Tipo de Ejercicio</Text>
-              <TouchableOpacity 
-                style={styles.customSelector} 
+              <TouchableOpacity
+                style={styles.customSelector}
                 onPress={() => setShowExerciseModal(true)}
                 activeOpacity={0.7}
               >
                 <View style={styles.selectorContent}>
                   <View style={styles.selectorLeft}>
-                    <MaterialIcons 
-                      name={getExerciseIcon(exerciseType).icon as any} 
-                      size={24} 
-                      color={getExerciseIcon(exerciseType).color} 
+                    <MaterialIcons
+                      name={getExerciseIcon(exerciseType).icon as any}
+                      size={24}
+                      color={getExerciseIcon(exerciseType).color}
                     />
                     <Text style={styles.selectorText}>{exerciseType}</Text>
                   </View>
@@ -272,8 +246,8 @@ export default function RegisterActivityScreen() {
                   keyboardType="numeric"
                   style={[styles.textInput, styles.durationInput]}
                 />
-                <TouchableOpacity 
-                  style={styles.unitSelector} 
+                <TouchableOpacity
+                  style={styles.unitSelector}
                   onPress={() => setShowDurationModal(true)}
                   activeOpacity={0.7}
                 >
@@ -286,8 +260,8 @@ export default function RegisterActivityScreen() {
             {/* Selector de Intensidad Mejorado */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Intensidad</Text>
-              <TouchableOpacity 
-                style={styles.customSelector} 
+              <TouchableOpacity
+                style={styles.customSelector}
                 onPress={() => setShowIntensityModal(true)}
                 activeOpacity={0.7}
               >
@@ -299,17 +273,6 @@ export default function RegisterActivityScreen() {
                   <MaterialIcons name="keyboard-arrow-down" size={24} color="#64748b" />
                 </View>
               </TouchableOpacity>
-            </View>
-
-            {/* Calorías */}
-            <View style={styles.caloriesContainer}>
-              <View style={styles.caloriesIcon}>
-                <MaterialIcons name="local-fire-department" size={24} color="#f59e0b" />
-              </View>
-              <View>
-                <Text style={styles.caloriesLabel}>Calorías estimadas</Text>
-                <Text style={styles.caloriesValue}>{calories} kcal</Text>
-              </View>
             </View>
 
             {/* Notas */}
@@ -325,16 +288,15 @@ export default function RegisterActivityScreen() {
               />
             </View>
           </View>
-
-          {/* Sección de Ubicación */}
+          {/* 2. Sección de Ubicación */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <MaterialIcons name="location-on" size={20} color="#3b82f6" />
               <Text style={styles.cardTitle}>Ubicación</Text>
             </View>
-            
-            <TouchableOpacity 
-              style={styles.locationButton} 
+
+            <TouchableOpacity
+              style={styles.locationButton}
               onPress={recordLocation}
               activeOpacity={0.8}
             >
@@ -343,7 +305,7 @@ export default function RegisterActivityScreen() {
                 {deviceLocation ? 'Actualizar ubicación' : 'Registrar ubicación actual'}
               </Text>
             </TouchableOpacity>
-            
+
             {deviceLocation && (
               <View style={styles.locationInfo}>
                 <MaterialIcons name="place" size={16} color="#10b981" />
@@ -352,7 +314,7 @@ export default function RegisterActivityScreen() {
             )}
           </View>
 
-          {/* Podómetro */}
+          {/* 3. Podómetro */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <MaterialIcons name="directions-walk" size={20} color="#3b82f6" />
@@ -361,7 +323,52 @@ export default function RegisterActivityScreen() {
             <PedometerComponent steps={steps} setSteps={setSteps} />
           </View>
 
-          {/* Botón Guardar */}
+          {/* 2. Sección de Calorías (separada) */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <MaterialIcons name="local-fire-department" size={20} color="#f59e0b" />
+              <Text style={styles.cardTitle}>Calorías Estimadas</Text>
+            </View>
+
+            <View style={styles.caloriesContainer}>
+              <View style={styles.caloriesIcon}>
+                <MaterialIcons name="local-fire-department" size={32} color="#f59e0b" />
+              </View>
+              <View>
+                <Text style={styles.caloriesLabel}>Calorías quemadas</Text>
+                <Text style={styles.caloriesValue}>{calories} kcal</Text>
+                <Text style={styles.caloriesSubtext}>Basado en duración e intensidad</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* 5. Sección de Foto */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <MaterialIcons name="photo-camera" size={20} color="#3b82f6" />
+              <Text style={styles.cardTitle}>Foto de la Actividad</Text>
+            </View>
+
+            <TouchableOpacity style={styles.photoContainer} onPress={openCamera} activeOpacity={0.8}>
+              {selfieUri ? (
+                <View style={styles.photoWrapper}>
+                  <Image source={{ uri: selfieUri }} style={styles.photo} />
+                  <View style={styles.photoOverlay}>
+                    <MaterialIcons name="edit" size={20} color="white" />
+                    <Text style={styles.photoOverlayText}>Cambiar foto</Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.photoPlaceholder}>
+                  <MaterialIcons name="add-a-photo" size={48} color="#3b82f6" />
+                  <Text style={styles.photoPlaceholderText}>Toca para tomar una foto</Text>
+                  <Text style={styles.photoPlaceholderSubtext}>Opcional</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* 6. Botón Guardar */}
           <TouchableOpacity
             style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
             onPress={handleSave}
@@ -409,8 +416,8 @@ export default function RegisterActivityScreen() {
                   >
                     <MaterialIcons name={exercise.icon as keyof typeof MaterialIcons.glyphMap} size={24} color={exercise.color} />
                     <Text style={[
-                      styles.modalOption,
-                      exerciseType === exercise.value && styles.modalOptionSelected
+                      styles.modalOptionText,
+                      exerciseType === exercise.value && styles.modalOptionTextSelected
                     ]}>
                       {exercise.label}
                     </Text>
@@ -455,8 +462,8 @@ export default function RegisterActivityScreen() {
                     <View style={[styles.intensityDot, { backgroundColor: option.color }]} />
                     <View style={styles.intensityInfo}>
                       <Text style={[
-                        styles.modalOption,
-                        intensity === option.value && styles.modalOptionSelected
+                        styles.modalOptionText,
+                        intensity === option.value && styles.modalOptionTextSelected
                       ]}>
                         {option.label}
                       </Text>
@@ -500,8 +507,8 @@ export default function RegisterActivityScreen() {
                   }}
                 >
                   <Text style={[
-                    styles.modalOption,
-                    durationUnit === unit.value && styles.modalOptionSelected
+                    styles.modalOptionText,
+                    durationUnit === unit.value && styles.modalOptionTextSelected
                   ]}>
                     {unit.label}
                   </Text>
@@ -517,6 +524,7 @@ export default function RegisterActivityScreen() {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -552,7 +560,7 @@ const styles = StyleSheet.create({
   },
   scroll: {
     padding: 16,
-    paddingBottom: 100
+    paddingBottom: 150
   },
   card: {
     backgroundColor: 'white',
@@ -766,7 +774,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 6,
+    marginBottom: 20,
     ...Platform.select({
       ios: {
         shadowColor: '#3b82f6',
@@ -834,9 +843,24 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     justifyContent: 'center',
   },
-    intensityDescription: {
-      fontSize: 13,
-      color: '#64748b',
-      marginTop: 2,
-    },
-  });
+  intensityDescription: {
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  caloriesSubtext: {
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  modalOptionText: {
+    fontSize: 16,
+    color: '#1e293b',
+    fontWeight: '500',
+    flex: 1,
+  },
+  modalOptionTextSelected: {
+    color: '#3b82f6',
+    fontWeight: '700',
+  },
+});
