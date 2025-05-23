@@ -5,13 +5,13 @@
     "version": "1.0.0",
     "orientation": "portrait",
 
-    "icon": "./assets/coosanjer.png",
+    "icon": "./assets/LOGO.png",
 
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
 
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/LOGO FIT ICON.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -22,7 +22,7 @@
 
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/coosanjer.png",
+        "foregroundImage": "./assets/LOGO FIT ICON.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -30,7 +30,7 @@
     },
 
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/LOGO FIT ICON.png"
     },
 
     "extra": {
