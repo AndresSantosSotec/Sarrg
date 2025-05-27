@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,11 @@ import {
   Platform,
   ActivityIndicator,
   Dimensions,
+  Alert,
+  TextInput,
 } from 'react-native';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../contexts/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,8 +39,80 @@ const COLORS = {
 };
 
 export default function DashboardScreen() {
-  const { collaborator, refreshData, loading } = useContext(AuthContext);
+  const { collaborator, refreshData, loading, updatePhoto, changePassword } = useContext(AuthContext);
   const { bottom } = useSafeAreaInsets();
+
+  // Estado para la foto
+  const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  // Estado para cambio de contraseña
+  const [curPwd, setCurPwd] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [confPwd, setConfPwd] = useState('');
+  const [changing, setChanging] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+
+  // Picker de galería
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      return Alert.alert('Permiso denegado', 'Necesitamos acceso a la galería.');
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setLocalPhotoUri(result.assets[0].uri);
+    }
+  };
+
+  // Subir la foto usando el contexto
+  const uploadPhoto = async () => {
+    if (!localPhotoUri) {
+      return Alert.alert('Selecciona una imagen primero');
+    }
+
+    try {
+      setUploading(true);
+      // 1) Sube la foto al servidor y refresca internamente el contexto
+      await updatePhoto(localPhotoUri);
+      // 2) REFRESCA el contexto por si acaso (no hace daño si ya lo hizo updatePhoto)
+      await refreshData();
+
+      Alert.alert('¡Listo!', 'Foto de perfil actualizada.');
+      setLocalPhotoUri(null);
+    } catch {
+      Alert.alert('Error', 'No se pudo actualizar la foto.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+
+
+  // Cambiar contraseña
+  const onChangePassword = async () => {
+    if (newPwd !== confPwd) return Alert.alert('Error', 'Las contraseñas no coinciden');
+
+    try {
+      setChanging(true);
+      await changePassword(curPwd, newPwd, confPwd);
+      Alert.alert('Éxito', 'Contraseña actualizada');
+      setCurPwd('');
+      setNewPwd('');
+      setConfPwd('');
+      setShowPasswordForm(false);
+    } catch (err: any) {
+      const msg = err.response?.data?.errors?.current_password?.[0] || err.response?.data?.message;
+      Alert.alert('Error', msg || 'No se pudo cambiar la contraseña');
+    } finally {
+      setChanging(false);
+    }
+  };
 
   if (!collaborator) {
     return (
@@ -69,8 +144,6 @@ export default function DashboardScreen() {
         end={{ x: 1, y: 1 }}
       >
         {/* Contenedor superior para marca y botones */}
-
-
         <View style={styles.topHeaderContainer}>
           {/* Sección izquierda - Marca */}
           <View style={styles.brandContainer}>
@@ -78,7 +151,7 @@ export default function DashboardScreen() {
             <Text style={styles.brandSubtext}>Sistema de Bienestar</Text>
           </View>
 
-          {/* Contenedor para CoinFits y Reload con espaciado controlado */}
+          {/* Contenedor para CoinFits y Reload */}
           <View style={styles.rightSection}>
             {/* Sección CoinFits */}
             <TouchableOpacity
@@ -99,7 +172,7 @@ export default function DashboardScreen() {
             >
               <FontAwesome5
                 name="sync-alt"
-                size={12}
+                size={14}
                 color={COLORS.white}
                 style={loading ? styles.refreshIconLoading : null}
               />
@@ -109,20 +182,110 @@ export default function DashboardScreen() {
 
         {/* Perfil del usuario */}
         <View style={styles.profileContainer}>
-          <Image
-            source={{
-              uri: collaborator.photo_url || 'https://via.placeholder.com/100',
-            }}
-            style={styles.avatar}
-          />
+          <View style={styles.avatarContainer}>
+            <TouchableOpacity onPress={pickImage} disabled={uploading}>
+              <Image
+                source={{
+                  uri: localPhotoUri
+                    ? localPhotoUri
+                    : (
+                      collaborator.photo_url
+                        ? `${collaborator.photo_url}?t=${Date.now()}`
+                        : 'https://via.placeholder.com/100'
+                    ),
+                }}
+                style={styles.avatar}
+              />
+              {uploading && (
+                <View style={styles.uploadingOverlay}>
+                  <ActivityIndicator size="small" color={COLORS.white} />
+                </View>
+              )}
+            </TouchableOpacity>
+
+            {localPhotoUri && (
+              <TouchableOpacity
+                style={styles.savePhotoBtn}
+                onPress={uploadPhoto}
+                disabled={uploading}
+              >
+                <Text style={styles.savePhotoText}>
+                  {uploading ? 'Subiendo...' : 'Guardar foto'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
           <View style={styles.profileText}>
             <Text style={styles.name}>{collaborator.nombre}</Text>
             <Text style={styles.email}>{collaborator.user.email}</Text>
             <Text style={styles.occupation}>{collaborator.ocupacion}</Text>
+
+            {/* Botón para mostrar formulario de contraseña */}
+            <TouchableOpacity
+              style={styles.changePasswordBtn}
+              onPress={() => setShowPasswordForm(!showPasswordForm)}
+            >
+              <MaterialIcons name="lock" size={16} color={COLORS.white} />
+              <Text style={styles.changePasswordText}>Cambiar contraseña</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
 
+        {/* Formulario de cambio de contraseña */}
+        {showPasswordForm && (
+          <View style={styles.passwordForm}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Contraseña actual"
+              placeholderTextColor={COLORS.mediumGray}
+              secureTextEntry
+              value={curPwd}
+              onChangeText={setCurPwd}
+            />
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Nueva contraseña"
+              placeholderTextColor={COLORS.mediumGray}
+              secureTextEntry
+              value={newPwd}
+              onChangeText={setNewPwd}
+            />
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Confirmar nueva contraseña"
+              placeholderTextColor={COLORS.mediumGray}
+              secureTextEntry
+              value={confPwd}
+              onChangeText={setConfPwd}
+            />
+
+            <View style={styles.passwordButtonsContainer}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => {
+                  setShowPasswordForm(false);
+                  setCurPwd('');
+                  setNewPwd('');
+                  setConfPwd('');
+                }}
+              >
+                <Text style={styles.cancelBtnText}>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.savePasswordBtn}
+                onPress={onChangePassword}
+                disabled={changing || !curPwd || !newPwd || !confPwd}
+              >
+                <Text style={styles.savePasswordText}>
+                  {changing ? 'Cambiando...' : 'Cambiar'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </LinearGradient>
 
       <ScrollView
         contentContainerStyle={[
@@ -333,14 +496,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 10,
-    position: 'relative',
+    marginBottom: 20,
   },
   rightSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    position: 'relative',
-    minHeight: 80,
+    gap: 12, // Espacio entre elementos
   },
   headerButtonsContainer: {
     flexDirection: 'row',
@@ -383,8 +544,8 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   brandContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
+    flex: 1,
+    alignItems: 'flex-start',
   },
   brandText: {
     fontSize: 20,
@@ -401,8 +562,12 @@ const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
     paddingHorizontal: 4,
+  },
+  // Estilos nuevos para el avatar y foto
+  avatarContainer: {
+    alignItems: 'center',
+    marginRight: 14,
   },
   avatar: {
     width: 70,
@@ -410,7 +575,26 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     borderWidth: 3,
     borderColor: 'rgba(255,255,255,0.4)',
-    marginRight: 14,
+  },
+  uploadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  savePhotoBtn: {
+    backgroundColor: COLORS.success,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    marginTop: 8,
+  },
+  savePhotoText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   profileText: {
     flex: 1,
@@ -435,16 +619,77 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: 16,
   },
+  // Estilos nuevos para el botón de cambiar contraseña
+  changePasswordBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    marginTop: 8,
+  },
+  changePasswordText: {
+    color: COLORS.white,
+    fontSize: 12,
+    marginLeft: 4,
+    fontWeight: '500',
+  },
+  // Estilos para el formulario de contraseña
+  passwordForm: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+  },
+  passwordInput: {
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 10,
+    fontSize: 14,
+    color: COLORS.darkGray,
+  },
+  passwordButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  cancelBtn: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    flex: 0.45,
+  },
+  cancelBtnText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  savePasswordBtn: {
+    backgroundColor: COLORS.success,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    flex: 0.45,
+  },
+  savePasswordText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   coinContainer: {
-    position: 'absolute',
-    top: 60,
-    right: 20,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 14,
-    minWidth: 80,
+    minWidth: 70,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
   },
@@ -461,7 +706,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: COLORS.white,
-    marginTop: 3,
+    marginTop: 2,
     lineHeight: 18,
   },
   coinLabel: {
@@ -471,9 +716,6 @@ const styles = StyleSheet.create({
     lineHeight: 13,
   },
   headerRefreshButton: {
-    position: 'absolute',
-    top: 70,
-    right: 110,
     width: 40,
     height: 40,
     borderRadius: 20,

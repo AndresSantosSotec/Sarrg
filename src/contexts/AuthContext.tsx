@@ -71,7 +71,13 @@ interface AuthContextData {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  refreshData: () => Promise<void>; // Nueva función añadida
+  refreshData: () => Promise<void>;
+  changePassword: (
+    current_password: string,
+    new_password: string,
+    new_password_confirmation: string
+  ) => Promise<void>;
+  updatePhoto: (photoUri: string) => Promise<string>;
 }
 
 export const AuthContext = createContext<AuthContextData>({
@@ -82,7 +88,9 @@ export const AuthContext = createContext<AuthContextData>({
   loading: true,
   login: async () => {},
   logout: async () => {},
-  refreshData: async () => {}, // Valor inicial añadido
+  refreshData: async () => {},
+  changePassword: async () => {},
+  updatePhoto: async () => ''
 });
 
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
@@ -99,7 +107,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       );
       setCollaborator(data.collaborator);
     } catch (err) {
-      // Si da 404 o falla, no es colaborador
       setCollaborator(null);
     }
   };
@@ -108,10 +115,10 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const refreshData = async () => {
     setLoading(true);
     try {
-      // refetch user
+      // Refetch user
       const resUser = await api.get<{ user: User }>('/app/user');
       setUser(resUser.data.user);
-      // refetch collaborator
+      // Refetch collaborator
       await loadCollaborator();
     } finally {
       setLoading(false);
@@ -176,6 +183,39 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     setCollaborator(null);
   };
 
+  // Cambiar contraseña
+  const changePassword = async (
+    current_password: string,
+    new_password: string,
+    new_password_confirmation: string
+  ) => {
+    await api.post('/app/user/change-password', {
+      current_password,
+      new_password,
+      new_password_confirmation,
+    });
+  };
+
+  // Actualizar foto de perfil
+  const updatePhoto = async (photoUri: string) => {
+    const form = new FormData();
+    form.append('photo', {
+      uri: photoUri,
+      name: 'profile.jpg',
+      type: 'image/jpeg',
+    } as any);
+
+    const { data } = await api.post<{ photo_url: string }>(
+      '/app/user/photo',
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+
+    // Refresca collaborator para que tome la nueva URL
+    await refreshData();
+    return data.photo_url;
+  };
+
   const isCollaborator = !!collaborator;
 
   return (
@@ -188,7 +228,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         loading,
         login,
         logout,
-        refreshData, // Nueva función expuesta
+        refreshData,
+        changePassword,
+        updatePhoto,
       }}
     >
       {children}

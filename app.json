@@ -4,22 +4,21 @@
     "slug": "coosanjerfit",
     "version": "1.0.0",
     "orientation": "portrait",
-
     "icon": "./assets/LOGO.png",
-
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-
     "splash": {
       "image": "./assets/LOGO FIT ICON.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.sargefitapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
-
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/LOGO FIT ICON.png",
@@ -28,11 +27,9 @@
       "edgeToEdgeEnabled": true,
       "package": "com.anonymous.sargefitapp"
     },
-
     "web": {
       "favicon": "./assets/LOGO FIT ICON.png"
     },
-
     "extra": {
       "eas": {
         "projectId": "f3b0853a-325f-4ecc-8794-c1af1dd60e2a"

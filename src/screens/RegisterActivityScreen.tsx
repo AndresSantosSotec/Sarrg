@@ -14,7 +14,7 @@ import api from '../services/api';
 import PedometerComponent from '../components/Pedometer';
 
 export default function RegisterActivityScreen() {
-  const [exerciseType, setExerciseType] = useState('Caminata + Trote Básico');
+  const [exerciseType, setExerciseType] = useState('Caminata');
   const [duration, setDuration] = useState('0');
   const [durationUnit, setDurationUnit] = useState('minutos');
   const [intensity, setIntensity] = useState('Media');
@@ -30,22 +30,93 @@ export default function RegisterActivityScreen() {
   const [showIntensityModal, setShowIntensityModal] = useState(false);
   const [showDurationModal, setShowDurationModal] = useState(false);
 
+  const [searchTerm, setSearchTerm] = useState('');
+
   const exerciseOptions = [
-    { label: 'Caminata + Trote Básico', value: 'Caminata + Trote Básico', icon: 'directions-walk', color: '#10b981' },
+    { label: 'Caminata', value: 'Caminata', icon: 'directions-walk', color: '#10b981' },
+    { label: 'Trote Básico', value: 'Trote Básico', icon: 'directions-run', color: '#047857' },
+    { label: 'Pausas Activas', value: 'Pausas Activas', icon: 'self-improvement', color: '#fbbf24' },
     { label: 'Ciclismo', value: 'Ciclismo', icon: 'directions-bike', color: '#3b82f6' },
     { label: 'Natación', value: 'Natación', icon: 'pool', color: '#06b6d4' },
     { label: 'Yoga', value: 'Yoga', icon: 'self-improvement', color: '#8b5cf6' },
-    { label: 'Entrenamiento Fuerza', value: 'Entrenamiento Fuerza', icon: 'fitness-center', color: '#ef4444' },
+    { label: 'Entrenamiento de Fuerza', value: 'Entrenamiento de Fuerza', icon: 'fitness-center', color: '#ef4444' },
     { label: 'HIIT', value: 'HIIT', icon: 'flash-on', color: '#f59e0b' },
+    { label: 'Pilates', value: 'Pilates', icon: 'accessibility-new', color: '#db2777' },
+    { label: 'Aeróbicos', value: 'Aeróbicos', icon: 'airline-seat-recline-normal', color: '#8b5cf6' },
+    { label: 'Danza', value: 'Danza', icon: 'music-note', color: '#ec4899' },
+    { label: 'Zumba', value: 'Zumba', icon: 'music-note', color: '#f97316' },
+    { label: 'Saltar la cuerda', value: 'Saltar la cuerda', icon: 'replay', color: '#f43f5e' },
+    { label: 'Remo', value: 'Remo', icon: 'rowing', color: '#0284c7' },
+    { label: 'Elíptica', value: 'Elíptica', icon: 'fitness-center', color: '#2563eb' },
+    { label: 'Senderismo', value: 'Senderismo', icon: 'terrain', color: '#4ade80' },
+    { label: 'Escalada', value: 'Escalada', icon: 'terrain', color: '#22c55e' },
+    { label: 'Boxeo', value: 'Boxeo', icon: 'sports-mma', color: '#dc2626' },
+    { label: 'Artes Marciales', value: 'Artes Marciales', icon: 'sports-karate', color: '#7c3aed' },
+    { label: 'Tai Chi', value: 'Tai Chi', icon: 'self-improvement', color: '#4ade80' },
+    { label: 'Estiramiento', value: 'Estiramiento', icon: 'accessibility-new', color: '#a3e635' },
+    { label: 'CrossFit', value: 'CrossFit', icon: 'fitness-center', color: '#f97316' },
+    { label: 'Spinning', value: 'Spinning', icon: 'directions-bike', color: '#6366f1' },
+    { label: 'Kickboxing', value: 'Kickboxing', icon: 'sports-kabaddi', color: '#ef4444' },
+    { label: 'Barre', value: 'Barre', icon: 'accessibility', color: '#ec4899' },
+    { label: 'Peso Corporal', value: 'Peso Corporal', icon: 'fitness-center', color: '#f87171' },
+    { label: 'Kettlebell', value: 'Kettlebell', icon: 'fitness-center', color: '#fbbf24' },
+    { label: 'TRX', value: 'TRX', icon: 'fitness-center', color: '#8b5cf6' },
+    { label: 'Bandas de Resistencia', value: 'Bandas de Resistencia', icon: 'fitness-center', color: '#10b981' },
+    { label: 'Subir Escaleras', value: 'Subir Escaleras', icon: 'stairs', color: '#6b7280' },
+    { label: 'Esquí', value: 'Esquí', icon: 'downhill-skiing', color: '#0284c7' },
+    { label: 'Snowboard', value: 'Snowboard', icon: 'snowboarding', color: '#0ea5e9' },
+    { label: 'Surf', value: 'Surf', icon: 'surfing', color: '#3b82f6' },
+    { label: 'Patinaje', value: 'Patinaje', icon: 'roller-skate', color: '#f472b6' },
+    { label: 'Equitación', value: 'Equitación', icon: 'emoji-nature', color: '#4ade80' },
+    { label: 'Canotaje', value: 'Canotaje', icon: 'kayaking', color: '#06b6d4' },
+    { label: 'Kayak', value: 'Kayak', icon: 'kayaking', color: '#0ea5e9' },
+    { label: 'Patinaje en línea', value: 'Patinaje en línea', icon: 'roller-skate', color: '#f43f5e' },
+    { label: 'Parkour', value: 'Parkour', icon: 'directions-run', color: '#f59e0b' },
+    { label: 'Entrenamiento en Circuito', value: 'Entrenamiento en Circuito', icon: 'fitness-center', color: '#6366f1' },
   ];
 
   const caloriesPerMin: Record<string, number> = {
-    'Caminata + Trote Básico': 8,
+    'Caminata': 5,
+    'Pausas Activas': 3,
+    'Trote Básico': 8,
     'Ciclismo': 10,
     'Natación': 9,
     'Yoga': 4,
-    'Entrenamiento Fuerza': 7,
+    'Entrenamiento de Fuerza': 7,
     'HIIT': 12,
+    'Pilates': 3,
+    'Baile Aeróbico': 6,
+    'Zumba': 7,
+    'Spinning': 10,
+    'Remo': 9,
+    'Escalada': 8,
+    'Boxeo': 11,
+    'Kickboxing': 11,
+    'CrossFit': 12,
+    'Correr en cinta': 9,
+    'Escaladora': 8,
+    'Saltar la cuerda': 13,
+    'Step': 7,
+    'Entrenamiento Funcional': 9,
+    'Caminar Colina': 6,
+    'Senderismo': 6,
+    'Trail Running': 9,
+    'Patinaje': 7,
+    'Skateboard': 6,
+    'Kayak': 5,
+    'Stand Up Paddle': 5,
+    'Surf': 6,
+    'Snowboard': 4,
+    'Esquí': 7,
+    'Golf': 3,
+    'Tenis': 7,
+    'Squash': 8,
+    'Ping Pong': 4,
+    'Baloncesto': 8,
+    'Fútbol': 8,
+    'Voleibol': 6,
+    'Natación con Aletas': 10,
+    'Aquaeróbic': 6,
   };
 
   const intensityOptions = [
@@ -62,12 +133,31 @@ export default function RegisterActivityScreen() {
 
   useEffect(() => {
     (async () => {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permiso denegado', 'Necesitamos permiso para usar la cámara');
+      const cam = await ImagePicker.requestCameraPermissionsAsync();
+      const gal = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (cam.status !== 'granted' || gal.status !== 'granted') {
+        Alert.alert('Permiso denegado', 'Necesitamos acceso a cámara y galería');
       }
     })();
   }, []);
+
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+        allowsEditing: true,
+        aspect: [4, 3],
+      });
+      if (!result.canceled && result.assets.length) {
+        setSelfieUri(result.assets[0].uri);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo abrir la galería');
+    }
+  };
+
+
 
   useEffect(() => {
     const mins = durationUnit === 'horas' ? parseFloat(duration) * 60 : parseFloat(duration);
@@ -166,7 +256,7 @@ export default function RegisterActivityScreen() {
   };
 
   const resetForm = () => {
-    setExerciseType('Caminata + Trote Básico');
+    setExerciseType('Caminata');
     setDuration('45');
     setDurationUnit('minutos');
     setIntensity('Media');
@@ -343,30 +433,53 @@ export default function RegisterActivityScreen() {
           </View>
 
           {/* 5. Sección de Foto */}
+          {/* … dentro de tu render … */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <MaterialIcons name="photo-camera" size={20} color="#3b82f6" />
               <Text style={styles.cardTitle}>Foto de la Actividad</Text>
             </View>
 
-            <TouchableOpacity style={styles.photoContainer} onPress={openCamera} activeOpacity={0.8}>
-              {selfieUri ? (
-                <View style={styles.photoWrapper}>
-                  <Image source={{ uri: selfieUri }} style={styles.photo} />
-                  <View style={styles.photoOverlay}>
+            {selfieUri ? (
+              <View style={styles.photoWrapper}>
+                <Image source={{ uri: selfieUri }} style={styles.photo} />
+                <View style={styles.photoOverlay}>
+                  {/* Botón para quitar */}
+                  <TouchableOpacity
+                    style={styles.removeBtn}
+                    onPress={() => setSelfieUri(null)}
+                  >
+                    <MaterialIcons name="close" size={20} color="white" />
+                  </TouchableOpacity>
+                  {/* Botón para cambiar */}
+                  <TouchableOpacity
+                    style={styles.changeBtn}
+                    onPress={openCamera}
+                  >
                     <MaterialIcons name="edit" size={20} color="white" />
-                    <Text style={styles.photoOverlayText}>Cambiar foto</Text>
-                  </View>
+                    <Text style={styles.changeBtnText}>Cambiar</Text>
+                  </TouchableOpacity>
                 </View>
-              ) : (
-                <View style={styles.photoPlaceholder}>
-                  <MaterialIcons name="add-a-photo" size={48} color="#3b82f6" />
-                  <Text style={styles.photoPlaceholderText}>Toca para tomar una foto</Text>
-                  <Text style={styles.photoPlaceholderSubtext}>Opcional</Text>
-                </View>
-              )}
-            </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.photoPlaceholder}>
+                <MaterialIcons name="add-a-photo" size={48} color="#3b82f6" />
+                <Text style={styles.photoPlaceholderText}>Foto opcional</Text>
+              </View>
+            )}
+
+            <View style={styles.photoButtonsContainer}>
+              <TouchableOpacity style={styles.photoBtn} onPress={openCamera}>
+                <MaterialIcons name="camera-alt" size={20} color="white" />
+                <Text style={styles.photoBtnText}>Tomar foto</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.photoBtn} onPress={pickImage}>
+                <MaterialIcons name="photo-library" size={20} color="white" />
+                <Text style={styles.photoBtnText}>Galería</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+
 
           {/* 6. Botón Guardar */}
           <TouchableOpacity
@@ -401,31 +514,52 @@ export default function RegisterActivityScreen() {
                   <MaterialIcons name="close" size={24} color="#64748b" />
                 </TouchableOpacity>
               </View>
+
+              {/* INPUT DE BÚSQUEDA */}
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Buscar ejercicio..."
+                value={searchTerm}
+                onChangeText={setSearchTerm}
+              />
+
               <ScrollView style={styles.modalScroll}>
-                {exerciseOptions.map((exercise) => (
-                  <TouchableOpacity
-                    key={exercise.value}
-                    style={[
-                      styles.modalOption,
-                      exerciseType === exercise.value && styles.modalOptionSelected
-                    ]}
-                    onPress={() => {
-                      setExerciseType(exercise.value);
-                      setShowExerciseModal(false);
-                    }}
-                  >
-                    <MaterialIcons name={exercise.icon as keyof typeof MaterialIcons.glyphMap} size={24} color={exercise.color} />
-                    <Text style={[
-                      styles.modalOptionText,
-                      exerciseType === exercise.value && styles.modalOptionTextSelected
-                    ]}>
-                      {exercise.label}
-                    </Text>
-                    {exerciseType === exercise.value && (
-                      <MaterialIcons name="check" size={20} color="#3b82f6" />
-                    )}
-                  </TouchableOpacity>
-                ))}
+                {exerciseOptions
+                  .filter(opt =>
+                    opt.label.toLowerCase().includes(searchTerm.trim().toLowerCase())
+                  )
+                  .map(exercise => (
+                    <TouchableOpacity
+                      key={exercise.value}
+                      style={[
+                        styles.modalOption,
+                        exerciseType === exercise.value && styles.modalOptionSelected
+                      ]}
+                      onPress={() => {
+                        setExerciseType(exercise.value);
+                        setShowExerciseModal(false);
+                        setSearchTerm('');  // limpia búsqueda al seleccionar
+                      }}
+                    >
+                      <MaterialIcons
+                        name={exercise.icon as keyof typeof MaterialIcons.glyphMap}
+                        size={24}
+                        color={exercise.color}
+                      />
+                      <Text
+                        style={[
+                          styles.modalOptionText,
+                          exerciseType === exercise.value && styles.modalOptionTextSelected
+                        ]}
+                      >
+                        {exercise.label}
+                      </Text>
+                      {exerciseType === exercise.value && (
+                        <MaterialIcons name="check" size={20} color="#3b82f6" />
+                      )}
+                    </TouchableOpacity>
+                  ))
+                }
               </ScrollView>
             </View>
           </View>
@@ -547,6 +681,52 @@ const styles = StyleSheet.create({
       }
     })
   },
+  changeBtn: {
+    backgroundColor: 'rgba(59, 130, 246, 0.8)',
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  changeBtnText: {
+    color: 'white',
+    marginLeft: 4,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  //nuevos estilos actualizados 
+  // … tus estilos existentes …
+  photoButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 12,
+  },
+  photoButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 12,
+  },
+  photoBtn: {
+    backgroundColor: '#3b82f6',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 8,
+  },
+  photoBtnText: {
+    color: 'white',
+    marginLeft: 6,
+    fontWeight: '600',
+  },
+  previewImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    marginTop: 10,
+  },
+  //fin nuevos estils
+
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -597,6 +777,8 @@ const styles = StyleSheet.create({
     position: 'relative',
     borderRadius: 16,
     overflow: 'hidden',
+    alignSelf: 'center',
+    marginBottom: 12,
   },
   photo: {
     width: 200,
@@ -605,14 +787,17 @@ const styles = StyleSheet.create({
   },
   photoOverlay: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    padding: 12,
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    padding: 8,
+  },
+  removeBtn: {
+    backgroundColor: 'rgba(220, 38, 38, 0.8)',
+    borderRadius: 12,
+    padding: 4,
   },
   photoOverlayText: {
     color: 'white',
@@ -863,4 +1048,16 @@ const styles = StyleSheet.create({
     color: '#3b82f6',
     fontWeight: '700',
   },
+  searchInput: {
+    backgroundColor: '#f1f5f9',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 16,
+    marginHorizontal: 24,
+    marginBottom: 12,
+  },
+
 });
