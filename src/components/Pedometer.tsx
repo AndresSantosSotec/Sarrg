@@ -6,9 +6,10 @@ import * as IntentLauncher from 'expo-intent-launcher';
 interface PedometerProps {
   steps: number;
   setSteps: React.Dispatch<React.SetStateAction<number>>;
+  onTimeUpdate?: (seconds: number) => void;     // ✨ Nueva prop
 }
 
-const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
+const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeUpdate }) => {
   const [pedometerAvailable, setPedometerAvailable] = useState<boolean | null>(null);
   const [isActive, setIsActive] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
@@ -17,13 +18,13 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
   const [strideLength] = useState(0.70); // metros
   const [dailySteps, setDailySteps] = useState(0);
   const [lastResetDate, setLastResetDate] = useState(new Date().toDateString());
-  
+
   // Estados del temporizador
   const [elapsedTime, setElapsedTime] = useState(0);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [totalSessionTime, setTotalSessionTime] = useState(0);
   const [dailyTotalTime, setDailyTotalTime] = useState(0);
-  
+
   const progressAnim = useState(new Animated.Value(0))[0];
   const subscriptionRef = useRef<any>(null);
   const appState = useRef(AppState.currentState);
@@ -64,7 +65,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
           const end = new Date();
           const start = new Date();
           start.setDate(start.getDate() - 1);
-          
+
           // Esto triggeará la solicitud de permisos automáticamente
           await Pedometer.getStepCountAsync(start, end);
           return true;
@@ -109,7 +110,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
         const end = new Date();
         const start = new Date();
         start.setHours(start.getHours() - 1); // Solo última hora para test rápido
-        
+
         try {
           await Pedometer.getStepCountAsync(start, end);
           setPermissionGranted(true);
@@ -141,7 +142,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     if (hours > 0) {
       return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     } else {
@@ -166,9 +167,9 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
   // Iniciar temporizador
   const startTimer = () => {
     if (timerRef.current) return;
-    
+
     setSessionStartTime(new Date());
-    
+
     timerRef.current = setInterval(() => {
       setElapsedTime(prev => {
         const newElapsed = prev + 1;
@@ -203,11 +204,17 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
         setLastResetDate(today);
       }
     };
-
     checkNewDay();
     const interval = setInterval(checkNewDay, 60000);
     return () => clearInterval(interval);
   }, [lastResetDate]);
+
+  // Actualizar el tiempo transcurrido cada segundo al padre 
+  useEffect(() => {
+    if (onTimeUpdate) {
+      onTimeUpdate(elapsedTime);
+    }
+  }, [elapsedTime]);
 
   // Verificar disponibilidad del podómetro y permisos
   useEffect(() => {
@@ -215,7 +222,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
       try {
         const available = await Pedometer.isAvailableAsync();
         setPedometerAvailable(available);
-        
+
         if (available) {
           await checkPermissions();
         }
@@ -262,7 +269,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
 
   const startPedometer = async () => {
     if (subscriptionRef.current || !pedometerAvailable) return;
-    
+
     try {
       if (Platform.OS === 'ios') {
         const end = new Date();
@@ -277,7 +284,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
       } else {
         sessionStartSteps.current = 0;
       }
-      
+
       subscriptionRef.current = Pedometer.watchStepCount(result => {
         setSteps(prevSteps => {
           let newSteps;
@@ -286,7 +293,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
           } else {
             newSteps = Math.max(0, result.steps);
           }
-          
+
           setDailySteps(sessionStartSteps.current + newSteps);
           return newSteps;
         });
@@ -472,7 +479,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
             <Text style={styles.statLabel}>km</Text>
           </View>
         </View>
-        
+
         {/* Estadísticas de rendimiento */}
         {totalSessionTime > 0 && (
           <View style={styles.performanceStats}>
@@ -503,22 +510,22 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
             <Text style={styles.statLabel}>km</Text>
           </View>
         </View>
-        
+
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{formatTime(dailyTotalTime)}</Text>
             <Text style={styles.statLabel}>Tiempo total</Text>
           </View>
         </View>
-        
+
         <Text style={styles.goalText}>
           Meta diaria: {goal.toLocaleString()} pasos ({(goal * strideLength / 1000).toFixed(1)} km)
         </Text>
-        
+
         <View style={styles.progressBar}>
           <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
         </View>
-        
+
         <Text style={styles.progressText}>
           {Math.round((dailySteps / goal) * 100)}% de la meta diaria
         </Text>
@@ -537,8 +544,8 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
       <View style={styles.controls}>
         <View style={styles.mainControls}>
           {!isActive ? (
-            <TouchableOpacity 
-              style={[styles.button, styles.startBtn]} 
+            <TouchableOpacity
+              style={[styles.button, styles.startBtn]}
               onPress={handleStart}
             >
               <Text style={styles.buttonText}>
@@ -551,10 +558,10 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
             </TouchableOpacity>
           )}
         </View>
-        
+
         <View style={styles.secondaryControls}>
-          <TouchableOpacity 
-            style={[styles.button, styles.resetBtn]} 
+          <TouchableOpacity
+            style={[styles.button, styles.resetBtn]}
             onPress={handleReset}
             disabled={!isActive && steps === 0 && elapsedTime === 0}
           >
@@ -569,9 +576,9 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps }) => {
 export default PedometerComponent;
 
 const styles = StyleSheet.create({
-  container: { 
+  container: {
     gap: 16,
-    padding: 16 
+    padding: 16
   },
   loadingText: {
     fontSize: 16,

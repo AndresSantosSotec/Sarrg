@@ -71,26 +71,30 @@ export default function DashboardScreen() {
   };
 
   // Subir la foto usando el contexto
-  const uploadPhoto = async () => {
-    if (!localPhotoUri) {
-      return Alert.alert('Selecciona una imagen primero');
-    }
+const uploadPhoto = async () => {
+  if (!localPhotoUri) {
+    return Alert.alert('Selecciona una imagen primero');
+  }
 
-    try {
-      setUploading(true);
-      // 1) Sube la foto al servidor y refresca internamente el contexto
-      await updatePhoto(localPhotoUri);
-      // 2) REFRESCA el contexto por si acaso (no hace daño si ya lo hizo updatePhoto)
-      await refreshData();
+  try {
+    setUploading(true);
+    await updatePhoto(localPhotoUri);   // tu llamada al context
+    await refreshData();
+    Alert.alert('¡Listo!', 'Foto de perfil actualizada.');
+    setLocalPhotoUri(null);
+  } catch (err: any) {
+    console.error('Error en uploadPhoto:', err);
+    // Trata de extraer un mensaje útil de la respuesta HTTP
+    const msg =
+      err.response?.data?.errors?.photo?.[0] ||  // validación de Laravel
+      err.response?.data?.message ||             // mensaje general
+      err.message;                               // mensaje JS
+    Alert.alert('Error al subir foto', msg);
+  } finally {
+    setUploading(false);
+  }
+};
 
-      Alert.alert('¡Listo!', 'Foto de perfil actualizada.');
-      setLocalPhotoUri(null);
-    } catch {
-      Alert.alert('Error', 'No se pudo actualizar la foto.');
-    } finally {
-      setUploading(false);
-    }
-  };
 
 
 
