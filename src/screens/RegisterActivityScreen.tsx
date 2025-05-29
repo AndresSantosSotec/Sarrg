@@ -25,7 +25,7 @@ export default function RegisterActivityScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [notes, setNotes] = useState('');
   const [steps, setSteps] = useState(0);
-  const [sessionTime, setSessionTime] = useState(0);
+
 
   // Estados para modales de selección
   const [showExerciseModal, setShowExerciseModal] = useState(false);
@@ -133,11 +133,7 @@ export default function RegisterActivityScreen() {
     { label: 'horas', value: 'horas' }
   ];
   // Convierte sessionTime (segundos) a minutos cada vez que cambia
-  useEffect(() => {
-    // aquí elige tu método; por ejemplo, redondeo al minuto más cercano:
-    const mins = Math.round(sessionTime / 60).toString();
-    setDuration(mins);
-  }, [sessionTime]);
+
 
 
   useEffect(() => {
@@ -336,7 +332,7 @@ export default function RegisterActivityScreen() {
 
             {/* Duración */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Duración</Text>
+              <Text style={styles.inputLabel}>Objetivo a alcazar</Text>
               <View style={styles.durationContainer}>
                 <TextInput
                   value={duration}
@@ -422,7 +418,6 @@ export default function RegisterActivityScreen() {
             <PedometerComponent
               steps={steps}
               setSteps={setSteps}
-              onTimeUpdate={setSessionTime}
             />
           </View>
           {/* 2. Sección de Calorías (separada) */}
@@ -670,5 +665,3 @@ export default function RegisterActivityScreen() {
     </SafeAreaView>
   );
 }
-
-

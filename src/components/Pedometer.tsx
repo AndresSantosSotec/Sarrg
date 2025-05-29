@@ -2,41 +2,199 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert, AppState, Platform } from 'react-native';
 import { Pedometer } from 'expo-sensors';
 import * as IntentLauncher from 'expo-intent-launcher';
+import * as TaskManager from 'expo-task-manager';
+import * as BackgroundFetch from 'expo-background-fetch';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { styles } from './styles/Pedometer.styles';
+
+// Definir la tarea de background
+const BACKGROUND_PEDOMETER_TASK = 'background-pedometer-task';
+
+// Registrar la tarea de background con lógica mejorada
+TaskManager.defineTask(BACKGROUND_PEDOMETER_TASK, async ({ data, error }) => {
+  if (error) {
+    console.log('Background task error:', error);
+    return;
+  }
+  
+  try {
+    // Actualizar timestamp en AsyncStorage para tracking continuo
+    const now = Date.now();
+    await AsyncStorage.setItem('lastBackgroundUpdate', now.toString());
+    
+    // Mantener el servicio activo
+    console.log('Background pedometer task running at:', new Date(now).toLocaleTimeString());
+  } catch (error) {
+    console.log('Error in background task:', error);
+  }
+});
 
 interface PedometerProps {
   steps: number;
   setSteps: React.Dispatch<React.SetStateAction<number>>;
-  onTimeUpdate?: (seconds: number) => void;     // ✨ Nueva prop
+  onTimeUpdate?: (seconds: number) => void;
 }
 
 const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeUpdate }) => {
   const [pedometerAvailable, setPedometerAvailable] = useState<boolean | null>(null);
   const [isActive, setIsActive] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const previousSteps = useRef(steps);
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
-  const [isFirstTime, setIsFirstTime] = useState(true); // Rastrear si es primera vez
+  const [isFirstTime, setIsFirstTime] = useState(true);
   const [goal] = useState(10000);
-  const [strideLength] = useState(0.70); // metros
+  const [strideLength] = useState(0.70);
   const [dailySteps, setDailySteps] = useState(0);
   const [lastResetDate, setLastResetDate] = useState(new Date().toDateString());
 
-  // Estados del temporizador
+  // Estados del temporizador mejorados
   const [elapsedTime, setElapsedTime] = useState(0);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [totalSessionTime, setTotalSessionTime] = useState(0);
   const [dailyTotalTime, setDailyTotalTime] = useState(0);
+  
+  // Referencias para manejo de tiempo persistente
+  const realStartTimeRef = useRef<number | null>(null);
+  const lastPauseTimeRef = useRef<number | null>(null);
+  const accumulatedTimeRef = useRef(0);
 
   const progressAnim = useState(new Animated.Value(0))[0];
   const subscriptionRef = useRef<any>(null);
   const appState = useRef(AppState.currentState);
   const lastStepsRef = useRef(0);
   const sessionStartSteps = useRef(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const uiTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Storage keys
+  const STORAGE_KEYS = {
+    SESSION_START_TIME: 'pedometer_session_start_time',
+    ACCUMULATED_TIME: 'pedometer_accumulated_time',
+    IS_ACTIVE: 'pedometer_is_active',
+    LAST_PAUSE_TIME: 'pedometer_last_pause_time',
+    STEPS_COUNT: 'pedometer_steps_count',
+    DAILY_STEPS: 'pedometer_daily_steps',
+  };
+
+  // Guardar estado en AsyncStorage
+  const saveState = async () => {
+    try {
+      if (realStartTimeRef.current) {
+        await AsyncStorage.setItem(STORAGE_KEYS.SESSION_START_TIME, realStartTimeRef.current.toString());
+      }
+      await AsyncStorage.setItem(STORAGE_KEYS.ACCUMULATED_TIME, accumulatedTimeRef.current.toString());
+      await AsyncStorage.setItem(STORAGE_KEYS.IS_ACTIVE, isActive.toString());
+      await AsyncStorage.setItem(STORAGE_KEYS.STEPS_COUNT, steps.toString());
+      await AsyncStorage.setItem(STORAGE_KEYS.DAILY_STEPS, dailySteps.toString());
+    } catch (error) {
+      console.log('Error saving state:', error);
+    }
+  };
+
+  // Restaurar estado desde AsyncStorage
+  const restoreState = async () => {
+    try {
+      const savedStartTime = await AsyncStorage.getItem(STORAGE_KEYS.SESSION_START_TIME);
+      const savedAccumulatedTime = await AsyncStorage.getItem(STORAGE_KEYS.ACCUMULATED_TIME);
+      const savedIsActive = await AsyncStorage.getItem(STORAGE_KEYS.IS_ACTIVE);
+      const savedSteps = await AsyncStorage.getItem(STORAGE_KEYS.STEPS_COUNT);
+      const savedDailySteps = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_STEPS);
+
+      if (savedStartTime) {
+        realStartTimeRef.current = parseInt(savedStartTime);
+        setSessionStartTime(new Date(parseInt(savedStartTime)));
+      }
+
+      if (savedAccumulatedTime) {
+        accumulatedTimeRef.current = parseInt(savedAccumulatedTime);
+      }
+
+      if (savedIsActive === 'true') {
+        setIsActive(true);
+        // Recalcular tiempo transcurrido
+        calculateElapsedTime();
+        startUITimer();
+      }
+
+      if (savedSteps) {
+        setSteps(parseInt(savedSteps));
+      }
+
+      if (savedDailySteps) {
+        setDailySteps(parseInt(savedDailySteps));
+      }
+    } catch (error) {
+      console.log('Error restoring state:', error);
+    }
+  };
+
+  // Calcular tiempo transcurrido basado en timestamps reales
+  const calculateElapsedTime = () => {
+    if (!realStartTimeRef.current) return 0;
+    
+    const now = Date.now();
+    const rawElapsed = Math.floor((now - realStartTimeRef.current) / 1000);
+    const totalElapsed = accumulatedTimeRef.current + rawElapsed;
+    
+    setElapsedTime(totalElapsed);
+    setTotalSessionTime(totalElapsed);
+    setDailyTotalTime(prev => Math.max(prev, totalElapsed));
+    
+    return totalElapsed;
+  };
+
+  // Timer de UI que se actualiza solo cuando la app está activa
+  const startUITimer = () => {
+    if (uiTimerRef.current) {
+      clearInterval(uiTimerRef.current);
+    }
+
+    uiTimerRef.current = setInterval(() => {
+      if (isActive && realStartTimeRef.current) {
+        calculateElapsedTime();
+      }
+    }, 1000);
+  };
+
+  const stopUITimer = () => {
+    if (uiTimerRef.current) {
+      clearInterval(uiTimerRef.current);
+      uiTimerRef.current = null;
+    }
+  };
+
+  // Configurar background fetch con configuración más robusta
+  const setupBackgroundFetch = async () => {
+    try {
+      const status = await BackgroundFetch.getStatusAsync();
+      console.log('Background fetch status:', status);
+      
+      if (status === BackgroundFetch.BackgroundFetchStatus.Restricted || 
+          status === BackgroundFetch.BackgroundFetchStatus.Denied) {
+        Alert.alert(
+          'Background App Refresh',
+          'Para un mejor funcionamiento, habilita "Background App Refresh" en la configuración de tu dispositivo.'
+        );
+        return false;
+      }
+
+      await BackgroundFetch.registerTaskAsync(BACKGROUND_PEDOMETER_TASK, {
+        minimumInterval: 15000, // 15 segundos (mínimo permitido)
+        stopOnTerminate: false,
+        startOnBoot: false,
+      });
+
+      console.log('Background fetch registered successfully');
+      return true;
+    } catch (error) {
+      console.log('Error setting up background fetch:', error);
+      return false;
+    }
+  };
 
   // Función para solicitar permisos de actividad física
   const requestActivityPermission = async (): Promise<boolean> => {
     try {
       if (Platform.OS === 'android') {
-        // Para Android, verificar si tenemos acceso a sensores
         const isAvailable = await Pedometer.isAvailableAsync();
         if (!isAvailable) {
           Alert.alert(
@@ -47,10 +205,9 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
               {
                 text: 'Ir a Configuración',
                 onPress: () => {
-                  // Abrir configuración de la aplicación
                   IntentLauncher.startActivityAsync(
                     IntentLauncher.ActivityAction.APPLICATION_DETAILS_SETTINGS,
-                    { data: 'package:' + 'com.yourapp.package' } // Reemplaza con tu package name
+                    { data: 'package:' + 'com.yourapp.package' }
                   );
                 }
               }
@@ -60,13 +217,11 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         }
         return true;
       } else if (Platform.OS === 'ios') {
-        // Para iOS, intentar acceder y manejar la respuesta
         try {
           const end = new Date();
           const start = new Date();
           start.setDate(start.getDate() - 1);
 
-          // Esto triggeará la solicitud de permisos automáticamente
           await Pedometer.getStepCountAsync(start, end);
           return true;
         } catch (error: any) {
@@ -79,7 +234,6 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
                 {
                   text: 'Ir a Configuración',
                   onPress: () => {
-                    // En iOS no podemos abrir configuración directamente
                     Alert.alert(
                       'Instrucciones',
                       'Ve a Configuración de iOS > Privacidad y Seguridad > Movimiento y Actividad física > [Tu App] y activa el permiso.'
@@ -90,26 +244,23 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
             );
             return false;
           }
-          console.error('Error al solicitar permisos:', error);
           return false;
         }
       }
       return true;
     } catch (error) {
-      console.error('Error al solicitar permisos:', error);
       Alert.alert('Error', 'No se pudieron solicitar los permisos necesarios.');
       return false;
     }
   };
 
-  // Función mejorada para verificar permisos
+  // Función para verificar permisos
   const checkPermissions = async (): Promise<boolean> => {
     try {
       if (Platform.OS === 'ios') {
-        // Intentar obtener datos históricos para verificar permisos
         const end = new Date();
         const start = new Date();
-        start.setHours(start.getHours() - 1); // Solo última hora para test rápido
+        start.setHours(start.getHours() - 1);
 
         try {
           await Pedometer.getStepCountAsync(start, end);
@@ -120,18 +271,15 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
             setPermissionGranted(false);
             return false;
           }
-          // Otros errores podrían indicar que el permiso está OK pero hay otro problema
           setPermissionGranted(true);
           return true;
         }
       } else {
-        // Para Android, verificar disponibilidad
         const available = await Pedometer.isAvailableAsync();
         setPermissionGranted(available);
         return available;
       }
     } catch (error) {
-      console.error('Error verificando permisos:', error);
       setPermissionGranted(false);
       return false;
     }
@@ -164,36 +312,17 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     return Number((distanceKm / timeHours).toFixed(1));
   };
 
-  // Iniciar temporizador
-  const startTimer = () => {
-    if (timerRef.current) return;
-
-    setSessionStartTime(new Date());
-
-    timerRef.current = setInterval(() => {
-      setElapsedTime(prev => {
-        const newElapsed = prev + 1;
-        setTotalSessionTime(newElapsed);
-        setDailyTotalTime(dailyTime => dailyTime + 1);
-        return newElapsed;
-      });
-    }, 1000);
-  };
-
-  // Detener temporizador
-  const stopTimer = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+  // useEffect para actualizar el tiempo transcurrido
+  useEffect(() => {
+    if (onTimeUpdate) {
+      onTimeUpdate(elapsedTime);
     }
-  };
+  }, [elapsedTime, onTimeUpdate]);
 
-  // Resetear temporizador de sesión
-  const resetSessionTimer = () => {
-    setElapsedTime(0);
-    setTotalSessionTime(0);
-    setSessionStartTime(null);
-  };
+  // useEffect para guardar estado cuando cambia
+  useEffect(() => {
+    saveState();
+  }, [isActive, steps, dailySteps, elapsedTime]);
 
   // Verificar si es un nuevo día y resetear automáticamente
   useEffect(() => {
@@ -209,66 +338,80 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     return () => clearInterval(interval);
   }, [lastResetDate]);
 
-  // Actualizar el tiempo transcurrido cada segundo al padre 
+  // useEffect principal - MEJORADO
   useEffect(() => {
-    if (onTimeUpdate) {
-      onTimeUpdate(elapsedTime);
-    }
-  }, [elapsedTime]);
-
-  // Verificar disponibilidad del podómetro y permisos
-  useEffect(() => {
-    const checkAvailability = async () => {
+    const initializeComponent = async () => {
       try {
+        // Restaurar estado previo
+        await restoreState();
+        
+        // Verificar disponibilidad del podómetro
         const available = await Pedometer.isAvailableAsync();
         setPedometerAvailable(available);
 
         if (available) {
-          await checkPermissions();
+          const hasPermission = await checkPermissions();
+          await setupBackgroundFetch();
         }
       } catch (error) {
-        console.error('Error al verificar podómetro:', error);
+        console.log('Error initializing component:', error);
         setPedometerAvailable(false);
         setPermissionGranted(false);
       }
     };
 
-    checkAvailability();
+    initializeComponent();
 
+    // Manejo mejorado del AppState
     const subscription = AppState.addEventListener('change', nextAppState => {
+      console.log('App state changed:', appState.current, '->', nextAppState);
+      
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        // Verificar permisos cuando la app vuelve al primer plano
-        checkPermissions().then(hasPermission => {
-          if (hasPermission && isActive) {
-            startPedometer();
-            startTimer();
-          }
-        });
+        // App vuelve al primer plano
+        console.log('App returned to foreground');
+        
+        if (isActive && realStartTimeRef.current) {
+          // Recalcular tiempo transcurrido
+          calculateElapsedTime();
+          // Reiniciar timer de UI
+          startUITimer();
+        }
       } else if (nextAppState.match(/inactive|background/)) {
-        stopPedometer();
-        stopTimer();
+        // App va al fondo
+        console.log('App going to background');
+        
+        if (isActive) {
+          // Solo detener el timer de UI, NO el tracking de tiempo
+          stopUITimer();
+          // Guardar estado actual
+          saveState();
+        }
       }
+      
       appState.current = nextAppState;
     });
 
     return () => {
-      stopPedometer();
-      stopTimer();
       subscription.remove();
-    };
-  }, [isActive]);
-
-  // Limpiar temporizador al desmontar componente
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
     };
   }, []);
 
+  // Limpiar recursos al desmontar componente
+  useEffect(() => {
+    return () => {
+      stopUITimer();
+      if (subscriptionRef.current) {
+        subscriptionRef.current.remove();
+      }
+      BackgroundFetch.unregisterTaskAsync(BACKGROUND_PEDOMETER_TASK).catch(() => {});
+    };
+  }, []);
+
+  // Iniciar podómetro persistente
   const startPedometer = async () => {
-    if (subscriptionRef.current || !pedometerAvailable) return;
+    if (subscriptionRef.current || !pedometerAvailable) {
+      return;
+    }
 
     try {
       if (Platform.OS === 'ios') {
@@ -285,6 +428,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         sessionStartSteps.current = 0;
       }
 
+      // Iniciar suscripción persistente al podómetro
       subscriptionRef.current = Pedometer.watchStepCount(result => {
         setSteps(prevSteps => {
           let newSteps;
@@ -298,8 +442,10 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
           return newSteps;
         });
       });
+
+      console.log('Pedometer started successfully');
     } catch (error) {
-      console.error('Error al iniciar podómetro:', error);
+      console.log('Error starting pedometer:', error);
       Alert.alert('Error', 'No se pudo iniciar el podómetro');
     }
   };
@@ -311,40 +457,81 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     }
   };
 
-  // Función mejorada para manejar el inicio (con solicitud de permisos)
+  // Función handleStart - MEJORADA
   const handleStart = async () => {
-    // Si es la primera vez o no tenemos permisos, solicitarlos
-    if (isFirstTime || permissionGranted === false) {
-      const granted = await requestActivityPermission();
-      if (!granted) {
-        return; // No continuar si no se otorgaron permisos
+    try {
+      // Si es la primera vez o no tenemos permisos, solicitarlos
+      if (isFirstTime || permissionGranted === false) {
+        const granted = await requestActivityPermission();
+        if (!granted) {
+          return;
+        }
+        setPermissionGranted(true);
+        setIsFirstTime(false);
       }
-      setPermissionGranted(true);
-      setIsFirstTime(false);
-    }
 
-    // Verificar permisos una vez más antes de iniciar
-    const hasPermission = await checkPermissions();
-    if (!hasPermission) {
-      Alert.alert(
-        'Permisos necesarios',
-        'No se puede iniciar el podómetro sin los permisos necesarios.',
-        [
-          { text: 'OK' }
-        ]
-      );
-      return;
-    }
+      // Verificar permisos una vez más antes de iniciar
+      const hasPermission = await checkPermissions();
+      if (!hasPermission) {
+        Alert.alert(
+          'Permisos necesarios',
+          'No se puede iniciar el podómetro sin los permisos necesarios.'
+        );
+        return;
+      }
 
-    setIsActive(true);
-    startPedometer();
-    startTimer();
+      // Configurar timestamps para tracking continuo
+      const now = Date.now();
+      realStartTimeRef.current = now;
+      setSessionStartTime(new Date(now));
+      accumulatedTimeRef.current = 0;
+
+      // Establecer estado activo
+      setIsActive(true);
+
+      // Iniciar servicios
+      await startPedometer();
+      startUITimer();
+      await setupBackgroundFetch();
+
+      console.log('Pedometer session started at:', new Date(now).toLocaleTimeString());
+
+    } catch (error) {
+      console.log('Error starting pedometer session:', error);
+      Alert.alert('Error', 'No se pudo iniciar el podómetro');
+      setIsActive(false);
+    }
   };
 
-  const handleStop = () => {
+  const handleStop = async () => {
+    console.log('Stopping pedometer session');
+    
+    // Calcular tiempo final antes de detener
+    if (realStartTimeRef.current) {
+      calculateElapsedTime();
+    }
+    
     setIsActive(false);
     stopPedometer();
-    stopTimer();
+    stopUITimer();
+    
+    // Limpiar timestamps
+    realStartTimeRef.current = null;
+    setSessionStartTime(null);
+    
+    // Limpiar storage
+    await AsyncStorage.multiRemove([
+      STORAGE_KEYS.SESSION_START_TIME,
+      STORAGE_KEYS.IS_ACTIVE,
+      STORAGE_KEYS.LAST_PAUSE_TIME
+    ]);
+    
+    // Desregistrar tarea de background
+    try {
+      await BackgroundFetch.unregisterTaskAsync(BACKGROUND_PEDOMETER_TASK);
+    } catch (error) {
+      console.log('Error unregistering background task:', error);
+    }
   };
 
   const handleReset = () => {
@@ -355,16 +542,35 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Reiniciar',
-          onPress: () => {
+          onPress: async () => {
+            // Detener todo primero
             stopPedometer();
-            stopTimer();
+            stopUITimer();
+
+            // Resetear estados
             setSteps(0);
-            resetSessionTimer();
+            setElapsedTime(0);
+            setTotalSessionTime(0);
             sessionStartSteps.current = 0;
+            realStartTimeRef.current = null;
+            accumulatedTimeRef.current = 0;
+            setSessionStartTime(null);
+
+            // Limpiar storage
+            await AsyncStorage.multiRemove([
+              STORAGE_KEYS.SESSION_START_TIME,
+              STORAGE_KEYS.ACCUMULATED_TIME,
+              STORAGE_KEYS.STEPS_COUNT
+            ]);
+
+            // Si estaba activo, reiniciar después de un breve delay
             if (isActive) {
-              setTimeout(() => {
-                startPedometer();
-                startTimer();
+              setTimeout(async () => {
+                const now = Date.now();
+                realStartTimeRef.current = now;
+                setSessionStartTime(new Date(now));
+                await startPedometer();
+                startUITimer();
               }, 100);
             }
           }
@@ -373,18 +579,29 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     );
   };
 
-  const handleDailyReset = () => {
+  const handleDailyReset = async () => {
     stopPedometer();
-    stopTimer();
+    stopUITimer();
     setSteps(0);
     setDailySteps(0);
-    resetSessionTimer();
+    setElapsedTime(0);
+    setTotalSessionTime(0);
     setDailyTotalTime(0);
     sessionStartSteps.current = 0;
+    realStartTimeRef.current = null;
+    accumulatedTimeRef.current = 0;
+    setSessionStartTime(null);
+
+    // Limpiar todo el storage
+    await AsyncStorage.multiRemove(Object.values(STORAGE_KEYS));
+
     if (isActive) {
-      setTimeout(() => {
-        startPedometer();
-        startTimer();
+      setTimeout(async () => {
+        const now = Date.now();
+        realStartTimeRef.current = now;
+        setSessionStartTime(new Date(now));
+        await startPedometer();
+        startUITimer();
       }, 100);
     }
   };
@@ -569,195 +786,24 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Instrucciones mejoradas para background */}
+      {isActive && (
+        <View style={styles.instructionsSection}>
+          <Text style={styles.instructionsTitle}>💡 Para mejor funcionamiento:</Text>
+          <Text style={styles.instructionsText}>
+            • Mantén la app en segundo plano (no la cierres completamente)
+          </Text>
+          <Text style={styles.instructionsText}>
+            • Habilita "Background App Refresh" en Configuración
+          </Text>
+          <Text style={styles.instructionsText}>
+            • El podómetro seguirá contando incluso con la pantalla apagada
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
 
 export default PedometerComponent;
-
-const styles = StyleSheet.create({
-  container: {
-    gap: 16,
-    padding: 16
-  },
-  loadingText: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#6b7280'
-  },
-  permissionWarning: {
-    backgroundColor: '#fef3c7',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#f59e0b',
-    alignItems: 'center'
-  },
-  permissionText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#92400e',
-    textAlign: 'center'
-  },
-  permissionSubtext: {
-    fontSize: 14,
-    color: '#92400e',
-    textAlign: 'center',
-    marginTop: 4
-  },
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12
-  },
-  statusIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6
-  },
-  statusText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151'
-  },
-  timerSection: {
-    backgroundColor: '#ffffff',
-    padding: 20,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    alignItems: 'center'
-  },
-  timerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6b7280',
-    marginBottom: 8
-  },
-  timerDisplay: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#1d4ed8',
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace'
-  },
-  startTimeText: {
-    fontSize: 12,
-    color: '#9ca3af',
-    marginTop: 4
-  },
-  statsSection: {
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb'
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 12,
-    textAlign: 'center'
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 12
-  },
-  statItem: {
-    alignItems: 'center'
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1d4ed8'
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 4
-  },
-  performanceStats: {
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    paddingTop: 12,
-    marginTop: 8
-  },
-  goalText: {
-    fontSize: 14,
-    color: '#6b7280',
-    textAlign: 'center',
-    marginBottom: 8
-  },
-  progressBar: {
-    height: 16,
-    backgroundColor: '#e5e7eb',
-    borderRadius: 10,
-    overflow: 'hidden',
-    marginBottom: 8
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#4ade80'
-  },
-  progressText: {
-    fontSize: 12,
-    color: '#6b7280',
-    textAlign: 'center'
-  },
-  achievementSection: {
-    backgroundColor: '#f0fdf4',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#bbf7d0',
-    alignItems: 'center'
-  },
-  achievementText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#059669',
-    textAlign: 'center',
-    marginTop: 8
-  },
-  controls: {
-    gap: 12
-  },
-  mainControls: {
-    alignItems: 'center'
-  },
-  secondaryControls: {
-    flexDirection: 'row',
-    justifyContent: 'center'
-  },
-  button: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 10,
-    alignItems: 'center',
-    minWidth: 160
-  },
-  startBtn: {
-    backgroundColor: '#22c55e'
-  },
-  stopBtn: {
-    backgroundColor: '#ef4444'
-  },
-  resetBtn: {
-    backgroundColor: '#9ca3af'
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 16
-  },
-  errorText: {
-    color: '#ef4444',
-    textAlign: 'center',
-    fontSize: 16
-  }
-});

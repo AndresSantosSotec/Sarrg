@@ -12,11 +12,19 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.sargefitapp",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSMotionUsageDescription": "Esta app necesita acceso a los sensores de movimiento para contar tus pasos y medir tu actividad física.",
+        "UIBackgroundModes": [
+          "background-fetch",
+          "background-processing"
+        ]
       }
     },
     "android": {
@@ -25,11 +33,25 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.sargefitapp"
+      "package": "com.anonymous.sargefitapp",
+      "permissions": [
+        "com.google.android.gms.permission.ACTIVITY_RECOGNITION",
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.WAKE_LOCK"
+      ]
     },
     "web": {
       "favicon": "./assets/LOGO FIT ICON.png"
     },
+    "plugins": [
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "Permitir que $(PRODUCT_NAME) acceda a los datos de movimiento y fitness."
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "f3b0853a-325f-4ecc-8794-c1af1dd60e2a"

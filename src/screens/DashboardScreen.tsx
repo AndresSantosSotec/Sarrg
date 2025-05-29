@@ -17,6 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../contexts/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { styles } from './styles/DashboardScreen.styles';
 
 const { width } = Dimensions.get('window');
 
@@ -36,6 +37,26 @@ const COLORS = {
   success: '#52c41a',
   warning: '#faad14',
   danger: '#ff7875',
+};
+
+// Función para calcular peso objetivo basado en IMC saludable (21.5)
+const calculateTargetWeight = (altura: number) => {
+  const alturaMetros = altura / 100;
+  const imcObjetivo = 21.5; // IMC ideal en el rango normal (18.5-24.9)
+  return Math.round(imcObjetivo * alturaMetros * alturaMetros);
+};
+
+// Función para convertir kg a libras
+const kgToLbs = (kg: number) => {
+  return Math.round(kg * 2.20462);
+};
+
+// Función para determinar el estado del IMC
+const getIMCStatus = (imc: number) => {
+  if (imc < 18.5) return { text: 'Bajo peso', color: COLORS.warning };
+  if (imc < 25) return { text: 'Normal', color: COLORS.success };
+  if (imc < 30) return { text: 'Sobrepeso', color: COLORS.warning };
+  return { text: 'Obesidad', color: COLORS.danger };
 };
 
 export default function DashboardScreen() {
@@ -95,9 +116,6 @@ const uploadPhoto = async () => {
   }
 };
 
-
-
-
   // Cambiar contraseña
   const onChangePassword = async () => {
     if (newPwd !== confPwd) return Alert.alert('Error', 'Las contraseñas no coinciden');
@@ -131,6 +149,14 @@ const uploadPhoto = async () => {
       </View>
     );
   }
+
+  // Cálculos para peso objetivo y conversiones
+  const pesoActualKg = parseFloat(collaborator.peso.toString());
+  const pesoActualLbs = kgToLbs(pesoActualKg);
+  const pesoObjetivoKg = calculateTargetWeight(parseFloat(collaborator.altura.toString()));
+  const pesoObjetivoLbs = kgToLbs(pesoObjetivoKg);
+  const imcStatus = getIMCStatus(parseFloat(collaborator.indice_masa_corporal.toString()));
+  const diferenciaPeso = pesoActualKg - pesoObjetivoKg;
 
   return (
     <View style={styles.container}>
@@ -299,17 +325,32 @@ const uploadPhoto = async () => {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* Status Summary Cards */}
+        {/* Status Summary Cards - Mejoradas */}
         <View style={styles.summaryContainer}>
           <View style={[styles.summaryCard, styles.summaryCardPrimary]}>
             <MaterialIcons name="trending-up" size={28} color={COLORS.white} />
             <Text style={styles.summaryTitle}>Nivel Actual</Text>
             <Text style={styles.summaryValue}>{collaborator.nivel_asignado}</Text>
           </View>
-          <View style={[styles.summaryCard, styles.summaryCardGreen]}>
+          
+          {/* Card de IMC mejorada con estado */}
+          <View style={[styles.summaryCard, { backgroundColor: imcStatus.color }]}>
             <MaterialIcons name="favorite" size={28} color={COLORS.white} />
             <Text style={styles.summaryTitle}>IMC</Text>
             <Text style={styles.summaryValue}>{collaborator.indice_masa_corporal}</Text>
+            <Text style={[styles.summarySubtext, { color: COLORS.white, fontSize: 10 }]}>
+              {imcStatus.text}
+            </Text>
+          </View>
+
+          {/* Nueva card de peso objetivo */}
+          <View style={[styles.summaryCard, styles.summaryCardGold]}>
+            <MaterialIcons name="track-changes" size={28} color={COLORS.white} />
+            <Text style={styles.summaryTitle}>Peso Objetivo</Text>
+            <Text style={styles.summaryValue}>{pesoObjetivoKg} kg</Text>
+            <Text style={[styles.summarySubtext, { color: COLORS.white, fontSize: 10 }]}>
+              {pesoObjetivoLbs} lbs
+            </Text>
           </View>
         </View>
 
@@ -342,7 +383,7 @@ const uploadPhoto = async () => {
           />
         </View>
 
-        {/* Medical Information Card */}
+        {/* Medical Information Card - Mejorada */}
         <View style={styles.infoCard}>
           <View style={styles.cardHeader}>
             <LinearGradient
@@ -357,8 +398,47 @@ const uploadPhoto = async () => {
           </View>
 
           <InfoRow icon="straighten" iconColor={COLORS.mediumGray} label="Altura" value={`${collaborator.altura} cm`} />
-          <InfoRow icon="monitor-weight" iconColor={COLORS.mediumGray} label="Peso" value={`${collaborator.peso} kg`} />
-          <InfoRow icon="calculate" iconColor={COLORS.accent} label="IMC" value={`${collaborator.indice_masa_corporal} kg/m²`} isHighlight />
+          
+          {/* Peso actual con conversión a libras */}
+          <InfoRow 
+            icon="monitor-weight" 
+            iconColor={COLORS.mediumGray} 
+            label="Peso Actual" 
+            value={`${pesoActualKg} kg (${pesoActualLbs} lbs)`} 
+          />
+          
+          {/* Peso objetivo */}
+          <InfoRow 
+            icon="track-changes" 
+            iconColor={COLORS.gold} 
+            label="Peso Objetivo" 
+            value={`${pesoObjetivoKg} kg (${pesoObjetivoLbs} lbs)`}
+            isHighlight 
+          />
+
+          {/* Diferencia de peso */}
+          <InfoRow 
+            icon={diferenciaPeso > 0 ? "arrow-downward" : diferenciaPeso < 0 ? "arrow-upward" : "check-circle"} 
+            iconColor={diferenciaPeso > 0 ? COLORS.warning : diferenciaPeso < 0 ? COLORS.danger : COLORS.success} 
+            label="Diferencia" 
+            value={
+              diferenciaPeso === 0 
+                ? "¡En peso ideal!" 
+                : diferenciaPeso > 0 
+                  ? `${Math.abs(diferenciaPeso)} kg por perder (${kgToLbs(Math.abs(diferenciaPeso))} lbs)`
+                  : `${Math.abs(diferenciaPeso)} kg por ganar (${kgToLbs(Math.abs(diferenciaPeso))} lbs)`
+            }
+          />
+          
+          {/* IMC con estado */}
+          <InfoRow 
+            icon="calculate" 
+            iconColor={imcStatus.color} 
+            label="IMC" 
+            value={`${collaborator.indice_masa_corporal} kg/m² (${imcStatus.text})`} 
+            isHighlight 
+          />
+          
           <InfoRow icon="bloodtype" iconColor={COLORS.danger} label="Tipo Sangre" value={collaborator.tipo_sangre || 'No especificado'} />
         </View>
 
@@ -486,421 +566,3 @@ const LevelDetail = ({
     <Text style={styles.levelDetailText}>{text}</Text>
   </View>
 );
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.lightGray,
-  },
-  coinInfoContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  topHeaderContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
-  },
-  rightSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12, // Espacio entre elementos
-  },
-  headerButtonsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    position: 'relative',
-    minHeight: 80,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-    backgroundColor: COLORS.white,
-  },
-  errorText: {
-    color: COLORS.danger,
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginTop: 14,
-    marginBottom: 6,
-    lineHeight: 22,
-  },
-  errorSubtext: {
-    color: COLORS.mediumGray,
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  header: {
-    padding: 20,
-    paddingTop: 60,
-    paddingBottom: 32,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  brandContainer: {
-    flex: 1,
-    alignItems: 'flex-start',
-  },
-  brandText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.white,
-    letterSpacing: 1,
-  },
-  brandSubtext: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.85)',
-    fontWeight: '500',
-    marginTop: 2,
-  },
-  profileContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-  },
-  // Estilos nuevos para el avatar y foto
-  avatarContainer: {
-    alignItems: 'center',
-    marginRight: 14,
-  },
-  avatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.4)',
-  },
-  uploadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 35,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  savePhotoBtn: {
-    backgroundColor: COLORS.success,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    marginTop: 8,
-  },
-  savePhotoText: {
-    color: COLORS.white,
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  profileText: {
-    flex: 1,
-    paddingRight: 8,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.white,
-    marginBottom: 3,
-    lineHeight: 22,
-  },
-  email: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.85)',
-    marginBottom: 4,
-    lineHeight: 16,
-  },
-  occupation: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '500',
-    lineHeight: 16,
-  },
-  // Estilos nuevos para el botón de cambiar contraseña
-  changePasswordBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    marginTop: 8,
-  },
-  changePasswordText: {
-    color: COLORS.white,
-    fontSize: 12,
-    marginLeft: 4,
-    fontWeight: '500',
-  },
-  // Estilos para el formulario de contraseña
-  passwordForm: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-  },
-  passwordInput: {
-    backgroundColor: COLORS.white,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 10,
-    fontSize: 14,
-    color: COLORS.darkGray,
-  },
-  passwordButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  cancelBtn: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    flex: 0.45,
-  },
-  cancelBtnText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  savePasswordBtn: {
-    backgroundColor: COLORS.success,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    flex: 0.45,
-  },
-  savePasswordText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  coinContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 14,
-    minWidth: 70,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  coinIconWrapper: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 215, 0, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  coinValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.white,
-    marginTop: 2,
-    lineHeight: 18,
-  },
-  coinLabel: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '600',
-    lineHeight: 13,
-  },
-  headerRefreshButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  scrollContainer: {
-    padding: 16,
-  },
-  summaryContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-    gap: 12,
-  },
-  summaryCard: {
-    flex: 1,
-    padding: 20,
-    borderRadius: 16,
-    alignItems: 'center',
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  summaryCardPrimary: {
-    backgroundColor: COLORS.primary,
-  },
-  summaryCardGreen: {
-    backgroundColor: COLORS.green,
-  },
-  summaryTitle: {
-    fontSize: 12,
-    color: COLORS.white,
-    fontWeight: '600',
-    marginTop: 6,
-    marginBottom: 3,
-    lineHeight: 15,
-  },
-  summaryValue: {
-    fontSize: 16,
-    color: COLORS.white,
-    fontWeight: '700',
-    lineHeight: 18,
-  },
-  infoCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  cardIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.darkGray,
-    flex: 1,
-    lineHeight: 20,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingVertical: 4,
-  },
-  infoRowHighlight: {
-    backgroundColor: '#f8f9ff',
-    padding: 12,
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: COLORS.accent,
-  },
-  iconContainer: {
-    width: 28,
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  labelContainer: {
-    flex: 1.2,
-    marginRight: 10,
-  },
-  valueContainer: {
-    flex: 1.3,
-  },
-  rowLabel: {
-    fontSize: 13,
-    color: COLORS.mediumGray,
-    fontWeight: '500',
-    lineHeight: 16,
-  },
-  rowValue: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.darkGray,
-    textAlign: 'right',
-    lineHeight: 16,
-  },
-  rowValueHighlight: {
-    color: COLORS.accent,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  levelCard: {
-    backgroundColor: '#f0f8f0',
-    borderWidth: 2,
-    borderColor: COLORS.lightGreen,
-  },
-  levelDetails: {
-    marginTop: 12,
-  },
-  levelDetail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingVertical: 4,
-  },
-  levelDetailText: {
-    fontSize: 13,
-    color: COLORS.darkGray,
-    marginLeft: 10,
-    fontWeight: '500',
-    flex: 1,
-    lineHeight: 16,
-  },
-  footerContainer: {
-    alignItems: 'center',
-    paddingVertical: 24,
-    marginTop: 20,
-  },
-  footerText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.primary,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  footerSubtext: {
-    fontSize: 12,
-    color: COLORS.mediumGray,
-    textAlign: 'center',
-    marginTop: 3,
-    lineHeight: 15,
-  },
-  refreshIconLoading: {
-    transform: [{ rotate: '360deg' }],
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-});
