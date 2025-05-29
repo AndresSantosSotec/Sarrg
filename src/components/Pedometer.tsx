@@ -457,7 +457,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     }
   };
 
-  // Función handleStart - MEJORADA
+  // Función handleStart - CORREGIDA
   const handleStart = async () => {
     try {
       // Si es la primera vez o no tenemos permisos, solicitarlos
@@ -486,12 +486,16 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
       setSessionStartTime(new Date(now));
       accumulatedTimeRef.current = 0;
 
-      // Establecer estado activo
+      // Establecer estado activo ANTES de iniciar servicios
       setIsActive(true);
 
       // Iniciar servicios
       await startPedometer();
+      
+      // IMPORTANTE: Inicializar el tiempo inmediatamente y luego iniciar el timer
+      calculateElapsedTime();
       startUITimer();
+      
       await setupBackgroundFetch();
 
       console.log('Pedometer session started at:', new Date(now).toLocaleTimeString());
@@ -569,7 +573,11 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
                 const now = Date.now();
                 realStartTimeRef.current = now;
                 setSessionStartTime(new Date(now));
+                accumulatedTimeRef.current = 0;
+                
                 await startPedometer();
+                // CORREGIR: Inicializar tiempo y luego iniciar timer
+                calculateElapsedTime();
                 startUITimer();
               }, 100);
             }
@@ -600,7 +608,11 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         const now = Date.now();
         realStartTimeRef.current = now;
         setSessionStartTime(new Date(now));
+        accumulatedTimeRef.current = 0;
+        
         await startPedometer();
+        // CORREGIR: Inicializar tiempo y luego iniciar timer
+        calculateElapsedTime();
         startUITimer();
       }, 100);
     }
