@@ -395,6 +395,8 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     };
   }, []);
 
+
+
   // Limpiar recursos al desmontar componente
   useEffect(() => {
     return () => {
@@ -408,11 +410,13 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
 
   // Iniciar podómetro persistente
   const startPedometer = async () => {
-    if (subscriptionRef.current || !pedometerAvailable) {
+    // Ahora sólo comprobamos disponibilidad, sin revisar subscriptionRef
+    if (!pedometerAvailable) {
       return;
     }
 
     try {
+      // En iOS obtenemos pasos pasados para arrancar el conteo
       if (Platform.OS === 'ios') {
         const end = new Date();
         const start = new Date();
@@ -420,23 +424,19 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         try {
           const pastSteps = await Pedometer.getStepCountAsync(start, end);
           sessionStartSteps.current = pastSteps.steps;
-        } catch (error) {
+        } catch {
           sessionStartSteps.current = 0;
         }
       } else {
         sessionStartSteps.current = 0;
       }
 
-      // Iniciar suscripción persistente al podómetro
+      // Iniciamos la suscripción *siempre* que tengamos podómetro disponible
       subscriptionRef.current = Pedometer.watchStepCount(result => {
         setSteps(prevSteps => {
-          let newSteps;
-          if (Platform.OS === 'android') {
-            newSteps = result.steps;
-          } else {
-            newSteps = Math.max(0, result.steps);
-          }
-
+          const newSteps = Platform.OS === 'android'
+            ? result.steps
+            : Math.max(0, result.steps);
           setDailySteps(sessionStartSteps.current + newSteps);
           return newSteps;
         });
@@ -449,6 +449,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     }
   };
 
+
   const stopPedometer = () => {
     if (subscriptionRef.current) {
       subscriptionRef.current.remove();
@@ -456,53 +457,44 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     }
   };
 
-  // Función handleStart - CORREGIDA
+  // Función handleStart – VERSIÓN MEJORADA
   const handleStart = async () => {
     try {
-      // Solo verificar permisos si nunca se han verificado
+      // 1) Verificar o solicitar permisos (igual que antes)...
       if (permissionGranted === null) {
         const hasPermission = await checkPermissions();
         if (!hasPermission) {
           const granted = await requestActivityPermission();
-          if (!granted) {
-            return;
-          }
+          if (!granted) return;
           setPermissionGranted(true);
         } else {
           setPermissionGranted(true);
         }
       } else if (permissionGranted === false) {
-        // Si ya sabemos que no hay permisos, solicitarlos
         const granted = await requestActivityPermission();
-        if (!granted) {
-          return;
-        }
+        if (!granted) return;
         setPermissionGranted(true);
       }
 
-      // Configurar timestamps para tracking continuo
+      // 2) Preparar timestamps
       const now = Date.now();
       realStartTimeRef.current = now;
       setSessionStartTime(new Date(now));
       accumulatedTimeRef.current = 0;
 
-      // Establecer estado activo ANTES de iniciar servicios
+      // 3) Resetear contador de UI y marcar activo
+      setElapsedTime(0);
+      setTotalSessionTime(0);
       setIsActive(true);
 
-      // Iniciar servicios
-      await startPedometer();
-
-      // IMPORTANTE: Inicializar el tiempo inmediatamente
-      setElapsedTime(0); // Empezar desde 0
-      setTotalSessionTime(0);
-
-      // Iniciar el timer de UI
+      // 4) Iniciar el temporizador de pantalla YA
       startUITimer();
 
-      await setupBackgroundFetch();
+      // 5) Luego arrancar sensores y background (sin await que bloquee la UI)
+      startPedometer();
+      setupBackgroundFetch();
 
       console.log('Pedometer session started at:', new Date(now).toLocaleTimeString());
-
     } catch (error) {
       console.log('Error starting pedometer session:', error);
       Alert.alert('Error', 'No se pudo iniciar el podómetro');
@@ -513,33 +505,38 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
   const handleStop = async () => {
     console.log('Stopping pedometer session');
 
-    // Calcular tiempo final antes de detener
+    // 1) Calcula el tiempo final
     if (realStartTimeRef.current) {
       calculateElapsedTime();
     }
 
-    setIsActive(false);
-    stopPedometer();
+    // 2) Detén watcher y temporizador de UI
+    if (subscriptionRef.current) {
+      subscriptionRef.current.remove();
+      subscriptionRef.current = null;
+    }
     stopUITimer();
 
-    // Limpiar timestamps
+    // 3) Marca inactivo y limpia timestamps
+    setIsActive(false);
     realStartTimeRef.current = null;
     setSessionStartTime(null);
 
-    // Limpiar storage
+    // 4) Limpia el storage de la sesión
     await AsyncStorage.multiRemove([
       STORAGE_KEYS.SESSION_START_TIME,
       STORAGE_KEYS.IS_ACTIVE,
       STORAGE_KEYS.LAST_PAUSE_TIME
     ]);
 
-    // Desregistrar tarea de background
+    // 5) Desregistra la tarea de background
     try {
       await BackgroundFetch.unregisterTaskAsync(BACKGROUND_PEDOMETER_TASK);
     } catch (error) {
       console.log('Error unregistering background task:', error);
     }
   };
+
 
   const handleReset = () => {
     Alert.alert(
