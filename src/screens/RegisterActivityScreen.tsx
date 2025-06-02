@@ -38,6 +38,7 @@ export default function RegisterActivityScreen() {
     { label: 'Caminata', value: 'Caminata', icon: 'directions-walk', color: '#10b981' },
     { label: 'Trote Básico', value: 'Trote Básico', icon: 'directions-run', color: '#047857' },
     { label: 'Pausas Activas', value: 'Pausas Activas', icon: 'self-improvement', color: '#fbbf24' },
+    { label: 'Fútbol', value: 'Fútbol', icon: 'sports-soccer', color: '#22c55e' },
     { label: 'Ciclismo', value: 'Ciclismo', icon: 'directions-bike', color: '#3b82f6' },
     { label: 'Natación', value: 'Natación', icon: 'pool', color: '#06b6d4' },
     { label: 'Yoga', value: 'Yoga', icon: 'self-improvement', color: '#8b5cf6' },
@@ -79,6 +80,7 @@ export default function RegisterActivityScreen() {
 
   const caloriesPerMin: Record<string, number> = {
     'Caminata': 5,
+    'Fútbol': 10,
     'Pausas Activas': 3,
     'Trote Básico': 8,
     'Ciclismo': 10,
@@ -115,7 +117,6 @@ export default function RegisterActivityScreen() {
     'Squash': 8,
     'Ping Pong': 4,
     'Baloncesto': 8,
-    'Fútbol': 8,
     'Voleibol': 6,
     'Natación con Aletas': 10,
     'Aquaeróbic': 6,

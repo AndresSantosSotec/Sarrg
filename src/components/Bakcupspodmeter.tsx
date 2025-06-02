@@ -7,6 +7,7 @@ import * as BackgroundFetch from 'expo-background-fetch';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { styles } from './styles/Pedometer.styles';
 
+
 // Definir la tarea de background
 const BACKGROUND_PEDOMETER_TASK = 'background-pedometer-task';
 
@@ -37,10 +38,7 @@ interface PedometerProps {
 const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeUpdate }) => {
   const [pedometerAvailable, setPedometerAvailable] = useState<boolean | null>(null);
   const [isActive, setIsActive] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const previousSteps = useRef(steps);
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
-  const [isFirstTime, setIsFirstTime] = useState(false);
   const [goal] = useState(10000);
   const [strideLength] = useState(0.70);
   const [dailySteps, setDailySteps] = useState(0);
@@ -52,12 +50,10 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
   const [dailyTotalTime, setDailyTotalTime] = useState(0);
   // Referencias para manejo de tiempo persistente
   const realStartTimeRef = useRef<number | null>(null);
-  const lastPauseTimeRef = useRef<number | null>(null);
   const accumulatedTimeRef = useRef(0);
   const progressAnim = useState(new Animated.Value(0))[0];
   const subscriptionRef = useRef<any>(null);
   const appState = useRef(AppState.currentState);
-  const lastStepsRef = useRef(0);
   const sessionStartSteps = useRef(0);
   const uiTimerRef = useRef<NodeJS.Timeout | null>(null);
   // Storage keys
@@ -94,41 +90,33 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
       const savedSteps = await AsyncStorage.getItem(STORAGE_KEYS.STEPS_COUNT);
       const savedDailySteps = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_STEPS);
 
-      // 1) SESSION_START_TIME
-      if (savedStartTime != null && !isNaN(Number(savedStartTime))) {
-        const startNum = Number(savedStartTime);
-        realStartTimeRef.current = startNum;
-        setSessionStartTime(new Date(startNum));
+      if (savedStartTime) {
+        realStartTimeRef.current = parseInt(savedStartTime);
+        setSessionStartTime(new Date(parseInt(savedStartTime)));
       }
 
-      // 2) ACCUMULATED_TIME
-      if (savedAccumulatedTime != null && !isNaN(Number(savedAccumulatedTime))) {
-        accumulatedTimeRef.current = Number(savedAccumulatedTime);
+      if (savedAccumulatedTime) {
+        accumulatedTimeRef.current = parseInt(savedAccumulatedTime);
       }
 
-      // 3) IS_ACTIVE
       if (savedIsActive === 'true') {
         setIsActive(true);
-        // Recalcular tiempo y reiniciar UI timer
+        // Recalcular tiempo transcurrido
         calculateElapsedTime();
         startUITimer();
       }
 
-      // 4) STEPS_COUNT
-      if (savedSteps != null && !isNaN(Number(savedSteps))) {
-        setSteps(Number(savedSteps));
+      if (savedSteps) {
+        setSteps(parseInt(savedSteps));
       }
 
-      // 5) DAILY_STEPS
-      if (savedDailySteps != null && !isNaN(Number(savedDailySteps))) {
-        setDailySteps(Number(savedDailySteps));
+      if (savedDailySteps) {
+        setDailySteps(parseInt(savedDailySteps));
       }
     } catch (error) {
       console.log('Error restoring state:', error);
     }
   };
-
-
 
   // Calcular tiempo transcurrido basado en timestamps reales
   const calculateElapsedTime = () => {
@@ -185,11 +173,10 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
       }
 
       await BackgroundFetch.registerTaskAsync(BACKGROUND_PEDOMETER_TASK, {
-        minimumInterval: Platform.OS === 'android' ? 900 : 15,
+        minimumInterval: 15000, // 15 segundos (mínimo permitido)
         stopOnTerminate: false,
         startOnBoot: false,
       });
-
 
       console.log('Background fetch registered successfully');
       return true;
@@ -329,11 +316,8 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
 
   // useEffect para guardar estado cuando cambia
   useEffect(() => {
-    if (isActive) {
-      saveState();
-    }
+    saveState();
   }, [isActive, steps, dailySteps, elapsedTime]);
-
 
   // Verificar si es un nuevo día y resetear automáticamente
   useEffect(() => {
@@ -413,41 +397,18 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
   useEffect(() => {
     return () => {
       stopUITimer();
-
-      // 1) Quitar listener del podómetro
-      if (subscriptionRef.current && typeof subscriptionRef.current.remove === 'function') {
+      if (subscriptionRef.current) {
         subscriptionRef.current.remove();
-        subscriptionRef.current = null;
       }
-
-      // 2) Desregistrar background task solo si está registrada
-      (async () => {
-        try {
-          const tasks = await TaskManager.getRegisteredTasksAsync();
-          const isRegistered = tasks.some(t => t.taskName === BACKGROUND_PEDOMETER_TASK);
-          if (isRegistered) {
-            await BackgroundFetch.unregisterTaskAsync(BACKGROUND_PEDOMETER_TASK);
-          }
-        } catch (error) {
-          console.log('Error al desregistrar background task en cleanup:', error);
-        }
-      })();
+      BackgroundFetch.unregisterTaskAsync(BACKGROUND_PEDOMETER_TASK).catch(() => { });
     };
   }, []);
 
-
   // Iniciar podómetro persistente
   const startPedometer = async () => {
+    // Ahora sólo comprobamos disponibilidad, sin revisar subscriptionRef
+     const available = await Pedometer.isAvailableAsync(); 
     if (!pedometerAvailable) {
-      return;
-    }
-
-    // ** NUEVO: si el permiso está rechazado, no intentamos subscribirnos **
-    if (permissionGranted === false) {
-      Alert.alert(
-        'Permiso denegado',
-        'Activa Movimiento y Actividad en Configuración para usar el podómetro.'
-      );
       return;
     }
 
@@ -467,28 +428,23 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         sessionStartSteps.current = 0;
       }
 
-      // Intentar suscribirse al podómetro dentro de try/catch
-      try {
-        subscriptionRef.current = Pedometer.watchStepCount(result => {
-          setSteps(prevSteps => {
-            const newSteps = Platform.OS === 'android'
-              ? result.steps
-              : Math.max(0, result.steps);
-            setDailySteps(sessionStartSteps.current + newSteps);
-            return newSteps;
-          });
+      // Iniciamos la suscripción *siempre* que tengamos podómetro disponible
+      subscriptionRef.current = Pedometer.watchStepCount(result => {
+        setSteps(prevSteps => {
+          const newSteps = Platform.OS === 'android'
+            ? result.steps
+            : Math.max(0, result.steps);
+          setDailySteps(sessionStartSteps.current + newSteps);
+          return newSteps;
         });
-        console.log('Pedometer started successfully');
-      } catch (error) {
-        console.log('Error iniciando podómetro:', error);
-        Alert.alert('Error', 'No se pudo iniciar el podómetro');
-      }
+      });
+
+      console.log('Pedometer started successfully');
     } catch (error) {
       console.log('Error starting pedometer:', error);
       Alert.alert('Error', 'No se pudo iniciar el podómetro');
     }
   };
-
 
 
   const stopPedometer = () => {
@@ -500,6 +456,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
 
   // Función handleStart – VERSIÓN MEJORADA
   const handleStart = async () => {
+     console.log('→ handleStart: pedometerAvailable =', pedometerAvailable);
     try {
       // 1) Verificar o solicitar permisos (igual que antes)...
       if (permissionGranted === null) {
@@ -844,21 +801,6 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         </View>
       </View>
 
-      {/* Instrucciones mejoradas para background */}
-      {isActive && (
-        <View style={styles.instructionsSection}>
-          <Text style={styles.instructionsTitle}>💡 Para mejor funcionamiento:</Text>
-          <Text style={styles.instructionsText}>
-            • Mantén la app en segundo plano (no la cierres completamente)
-          </Text>
-          <Text style={styles.instructionsText}>
-            • Habilita "Background App Refresh" en Configuración
-          </Text>
-          <Text style={styles.instructionsText}>
-            • El podómetro seguirá contando incluso con la pantalla apagada
-          </Text>
-        </View>
-      )}
     </View>
   );
 };
