@@ -4,11 +4,11 @@
     "slug": "coosanjerfit",
     "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/LOGO.png",
+    "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/LOGO FIT ICON.png",
+      "image": "./assets/logo_fit_icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,7 +17,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.sargefitapp",
+      "bundleIdentifier": "com.anonymous.coosanjerfit",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSMotionUsageDescription": "Esta app necesita acceso a los sensores de movimiento para contar tus pasos y medir tu actividad física.",
@@ -29,7 +29,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/LOGO FIT ICON.png",
+        "foregroundImage": "./assets/logo_fit_icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -42,7 +42,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/LOGO FIT ICON.png"
+      "favicon": "./assets/Llogo_fit_icon.png"
     },
     "plugins": [
       [
