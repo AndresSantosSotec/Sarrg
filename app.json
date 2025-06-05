@@ -22,7 +22,7 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSMotionUsageDescription": "Esta app necesita acceso a los sensores de movimiento para contar tus pasos y medir tu actividad física.",
         "NSCameraUsageDescription": "Esta app necesita acceso a la cámara para dejar constancia de la actividad física y realizar otras funciones relacionadas con la cámara.",
-        "UIBackgroundModes": ["background-fetch", "background-processing"]
+        "UIBackgroundModes": ["fetch", "processing"]
       }
     },
     "android": {
