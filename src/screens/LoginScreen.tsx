@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Image,
 } from 'react-native';
 import { AuthContext } from '../contexts/AuthContext';
 
@@ -36,6 +37,7 @@ export default function LoginScreen() {
     <View style={styles.container}>
       {/* Logo + claim */}
       <View style={styles.logoContainer}>
+        <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
         <Text style={styles.title}>
           coosanjer
           <Text style={styles.titleHighlight}>FIT</Text>
@@ -153,5 +155,10 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
     fontSize: 12,
     marginBottom: 8,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 20,
   },
 });
