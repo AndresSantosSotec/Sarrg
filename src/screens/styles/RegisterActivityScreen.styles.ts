@@ -364,6 +364,15 @@ export const styles = StyleSheet.create({
         borderRadius: 12,
         marginVertical: 4,
     },
+    modalOptionUnit: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginVertical: 4,
+    },
     modalOptionSelected: {
         backgroundColor: '#eff6ff',
     },
@@ -387,6 +396,13 @@ export const styles = StyleSheet.create({
         color: '#1e293b',
         fontWeight: '500',
         flex: 1,
+    },
+    modalOptionTextUnit: {
+    fontSize: 16,
+    color: '#1e293b',
+    fontWeight: '500',
+    flex: 1,
+    textAlign: 'center',
     },
     modalOptionTextSelected: {
         color: '#3b82f6',

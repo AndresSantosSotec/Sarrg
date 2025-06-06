@@ -130,8 +130,8 @@ export default function RegisterActivityScreen() {
   ];
 
   const durationUnits = [
-    { label: 'minutos', value: 'minutos' },
-    { label: 'horas', value: 'horas' }
+    { label: 'minutos', value: 'minutos', color: '#10b981' },
+    { label: 'horas', value: 'horas',color: '#f59e0b' }
   ];
   // Convierte sessionTime (segundos) a minutos cada vez que cambia
 
@@ -648,7 +648,7 @@ export default function RegisterActivityScreen() {
                 <TouchableOpacity
                   key={unit.value}
                   style={[
-                    styles.modalOption,
+                    styles.modalOptionUnit,
                     durationUnit === unit.value && styles.modalOptionSelected
                   ]}
                   onPress={() => {
@@ -656,8 +656,9 @@ export default function RegisterActivityScreen() {
                     setShowDurationModal(false);
                   }}
                 >
+                  <View style={[styles.intensityDot, { backgroundColor: unit.color }]} />
                   <Text style={[
-                    styles.modalOptionText,
+                    styles.modalOptionTextUnit,
                     durationUnit === unit.value && styles.modalOptionTextSelected
                   ]}>
                     {unit.label}
