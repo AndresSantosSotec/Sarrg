@@ -441,7 +441,22 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
 
   // Iniciar podómetro persistente
   const startPedometer = async () => {
-    if (!pedometerAvailable) {
+    // Si aún no sabemos si el podómetro está disponible, consultarlo ahora
+    if (pedometerAvailable === null) {
+      try {
+        const available = await Pedometer.isAvailableAsync();
+        setPedometerAvailable(available);
+        if (!available) {
+          Alert.alert('Error', 'El podómetro no está disponible en este dispositivo');
+          return;
+        }
+      } catch (error) {
+        console.log('Error comprobando disponibilidad del podómetro:', error);
+        Alert.alert('Error', 'No se pudo verificar el podómetro');
+        return;
+      }
+    } else if (!pedometerAvailable) {
+      Alert.alert('Error', 'El podómetro no está disponible en este dispositivo');
       return;
     }
 
