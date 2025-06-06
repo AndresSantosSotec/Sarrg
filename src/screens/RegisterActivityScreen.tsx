@@ -197,6 +197,13 @@ export default function RegisterActivityScreen() {
 
   const recordLocation = async () => {
     try {
+      const isServicesEnabled = await Location.hasServicesEnabledAsync();
+      console.log('Servicios de ubicación habilitados:', isServicesEnabled);
+      if (!isServicesEnabled) {
+        Alert.alert('Ubicación desactivada', 'Por favor activa los servicios de ubicación en tu dispositivo.');
+        return;
+      }
+
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permiso denegado', 'Necesitamos permiso de ubicación');
@@ -206,8 +213,9 @@ export default function RegisterActivityScreen() {
       const loc = await Location.getCurrentPositionAsync({});
       setDeviceLocation(`${loc.coords.latitude.toFixed(5)}, ${loc.coords.longitude.toFixed(5)}`);
       Alert.alert('✅ Ubicación registrada', 'La ubicación se ha guardado correctamente');
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo obtener la ubicación');
+    } catch (error: any) {
+      console.error('Error al obtener ubicación:', JSON.stringify(error, null, 2));
+      Alert.alert('Error', 'No se pudo obtener la ubicación. Asegúrate de tener activado el GPS y haber dado los permisos.');
     }
   };
 
