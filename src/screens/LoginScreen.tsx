@@ -37,7 +37,6 @@ export default function LoginScreen() {
     <View style={styles.container}>
       {/* Logo + claim */}
       <View style={styles.logoContainer}>
-        <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
         <Text style={styles.title}>
           coosanjer
           <Text style={styles.titleHighlight}>FIT</Text>
