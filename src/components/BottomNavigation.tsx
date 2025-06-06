@@ -8,13 +8,13 @@ export default function BottomNavigation({ state, navigation }: BottomTabBarProp
   const { bottom } = useSafeAreaInsets();
 
   // Filtrar solo las rutas que queremos mostrar (sin Profile)
-  const allowedRoutes = ['Dashboard', 'RegisterActivity', 'Logout'];
+  const allowedRoutes = ['Dashboard', 'RegisterActivity', 'ActivityHistory', 'Logout'];
   const filteredRoutes = state.routes.filter(route => allowedRoutes.includes(route.name));
 
   return (
     <View style={[styles.navbar, { paddingBottom: bottom, height: 64 + bottom }]}>
-      {filteredRoutes.map((route, index) => {
-        const isActive = state.index === index;
+      {filteredRoutes.map((route) => {
+        const isActive = state.index === state.routes.indexOf(route);
 
         /* Ícono y texto según la ruta */
         type TabInfo = { icon: any; label: any; iconType: 'fontawesome' | 'fontawesome5' };
@@ -23,6 +23,8 @@ export default function BottomNavigation({ state, navigation }: BottomTabBarProp
             ? { icon: 'home', label: 'Inicio', iconType: 'fontawesome' }
             : route.name === 'RegisterActivity'
             ? { icon: 'running', label: 'Actividad', iconType: 'fontawesome5' }
+            : route.name === 'ActivityHistory'
+            ? { icon: 'history', label: 'Historial', iconType: 'fontawesome' }
             : { icon: 'sign-out', label: 'Salir', iconType: 'fontawesome' };
 
         return (
