@@ -47,4 +47,9 @@ export async function logout() {
   await AsyncStorage.multiRemove(['auth_token', 'user_data'])
 }
 
+export async function fetchUserActivities() {
+  const { data } = await api.get('/app/user/activities')
+  return data.data ?? data
+}
+
 export default api
