@@ -23,7 +23,8 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryUsageDescription": "Necesitamos acceso a tu galería para que puedas subir fotos de perfil o imágenes relacionadas con tu actividad física y progreso.",
         "NSMotionUsageDescription": "La app utiliza los sensores de movimiento para registrar tus pasos y monitorear tu actividad física con el fin de brindarte un seguimiento personalizado.",
-        "NSCameraUsageDescription": "Se requiere acceso a la cámara para capturar evidencia de tus entrenamientos, registrar tu progreso físico y facilitar funciones relacionadas con rutinas o retos."
+        "NSCameraUsageDescription": "Se requiere acceso a la cámara para capturar evidencia de tus entrenamientos, registrar tu progreso físico y facilitar funciones relacionadas con rutinas o retos.",
+        "NSLocationWhenInUseUsageDescription": "Necesitamos acceder a tu ubicación actual para registrar actividades físicas y mostrar contenido personalizado según tu posición."
       }
     },
     "android": {
