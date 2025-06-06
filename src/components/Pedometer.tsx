@@ -173,7 +173,20 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
   const setupBackgroundFetch = async () => {
     try {
       const status = await BackgroundFetch.getStatusAsync();
-      console.log('Background fetch status:', status);
+      // Logs detallados del estado
+      switch (status) {
+        case BackgroundFetch.BackgroundFetchStatus.Available:
+          console.log('📦 Background fetch está disponible.');
+          break;
+        case BackgroundFetch.BackgroundFetchStatus.Restricted:
+          console.log('⚠️ Background fetch está restringido.');
+          break;
+        case BackgroundFetch.BackgroundFetchStatus.Denied:
+          console.log('❌ Background fetch fue denegado.');
+          break;
+        default:
+          console.log('ℹ️ Estado desconocido de background fetch:', status);
+      }
 
       if (status === BackgroundFetch.BackgroundFetchStatus.Restricted ||
         status === BackgroundFetch.BackgroundFetchStatus.Denied) {
@@ -184,12 +197,17 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         return false;
       }
 
+      console.log('Intentando registrar la tarea de background:', BACKGROUND_PEDOMETER_TASK);
       await BackgroundFetch.registerTaskAsync(BACKGROUND_PEDOMETER_TASK, {
         minimumInterval: Platform.OS === 'android' ? 900 : 15,
         stopOnTerminate: false,
         startOnBoot: false,
       });
-
+      console.log('Tarea registrada con configuración:', {
+        minimumInterval: Platform.OS === 'android' ? 900 : 15,
+        stopOnTerminate: false,
+        startOnBoot: false,
+      });
 
       console.log('Background fetch registered successfully');
       return true;
@@ -375,11 +393,11 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
 
     // Manejo mejorado del AppState
     const subscription = AppState.addEventListener('change', nextAppState => {
-      console.log('App state changed:', appState.current, '->', nextAppState);
+      console.log(`[AppState] Cambio detectado: ${appState.current} → ${nextAppState} @ ${new Date().toLocaleTimeString()}`);
 
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
         // App vuelve al primer plano
-        console.log('App returned to foreground');
+        console.log(`[AppState] App volvió al primer plano @ ${new Date().toLocaleTimeString()}`);
 
         if (isActive && realStartTimeRef.current) {
           // Recalcular tiempo transcurrido
@@ -389,7 +407,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         }
       } else if (nextAppState.match(/inactive|background/)) {
         // App va al fondo
-        console.log('App going to background');
+        console.log(`[AppState] App fue enviada a segundo plano @ ${new Date().toLocaleTimeString()}`);
 
         if (isActive) {
           // Solo detener el timer de UI, NO el tracking de tiempo
@@ -427,7 +445,11 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
           const isRegistered = tasks.some(t => t.taskName === BACKGROUND_PEDOMETER_TASK);
           if (isRegistered) {
             await BackgroundFetch.unregisterTaskAsync(BACKGROUND_PEDOMETER_TASK);
+            console.log('Background task desregistrada correctamente');
+          } else {
+            console.log('Background task no estaba registrada, no se desregistró');
           }
+
         } catch (error) {
           console.log('Error al desregistrar background task en cleanup:', error);
         }
@@ -533,7 +555,16 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
 
       // 5) Luego arrancar sensores y background (sin await que bloquee la UI)
       startPedometer();
-      setupBackgroundFetch();
+
+      // Verificar si ya está registrada la tarea de background
+      const tasks = await TaskManager.getRegisteredTasksAsync();
+      const alreadyRegistered = tasks.some(t => t.taskName === BACKGROUND_PEDOMETER_TASK);
+      if (!alreadyRegistered) {
+        await setupBackgroundFetch();
+        console.log('Background fetch registrado desde handleStart');
+      } else {
+        console.log('La tarea de background ya estaba registrada en handleStart');
+      }
 
       console.log('Pedometer session started at:', new Date(now).toLocaleTimeString());
     } catch (error) {
@@ -570,11 +601,18 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
       STORAGE_KEYS.LAST_PAUSE_TIME
     ]);
 
-    // 5) Desregistra la tarea de background
+    // 5) Desregistra la tarea de background solo si está registrada
     try {
-      await BackgroundFetch.unregisterTaskAsync(BACKGROUND_PEDOMETER_TASK);
+      const tasks = await TaskManager.getRegisteredTasksAsync();
+      const isRegistered = tasks.some(t => t.taskName === BACKGROUND_PEDOMETER_TASK);
+      if (isRegistered) {
+        await BackgroundFetch.unregisterTaskAsync(BACKGROUND_PEDOMETER_TASK);
+        console.log('Background task desregistrada desde handleStop');
+      } else {
+        console.log('No se encontró tarea de background registrada en handleStop');
+      }
     } catch (error) {
-      console.log('Error unregistering background task:', error);
+      console.log('Error al intentar desregistrar background task en handleStop:', error);
     }
   };
 
@@ -593,6 +631,20 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
             // Detener todo primero
             stopPedometer();
             stopUITimer();
+
+            // Desregistrar la tarea si está activa
+            try {
+              const tasks = await TaskManager.getRegisteredTasksAsync();
+              const isRegistered = tasks.some(t => t.taskName === BACKGROUND_PEDOMETER_TASK);
+              if (isRegistered) {
+                await BackgroundFetch.unregisterTaskAsync(BACKGROUND_PEDOMETER_TASK);
+                console.log('Background task desregistrada desde handleReset');
+              } else {
+                console.log('No se encontró tarea de background registrada en handleReset');
+              }
+            } catch (error) {
+              console.log('Error al intentar desregistrar background task en handleReset:', error);
+            }
 
             // Resetear estados
             setSteps(0);
