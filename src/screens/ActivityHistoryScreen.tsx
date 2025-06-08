@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { fetchUserActivities } from '../services/api';
 
+
+//funcion fetchUserActivities() {
+//   return fetch('http://localhost:3000/api/v1/users/1/activities')
+//     .then(response => response.json())
 interface Activity {
   id: number;
   exercise_type: string;
