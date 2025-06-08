@@ -47,9 +47,24 @@ export async function logout() {
   await AsyncStorage.multiRemove(['auth_token', 'user_data'])
 }
 
-export async function fetchUserActivities() {
-  const { data } = await api.get('/app/user/activities')
-  return data.data ?? data
+export interface ActivityPage<T> {
+  data: T[]
+  current_page: number
+  last_page: number
+}
+
+export async function fetchUserActivities<T>(page = 1): Promise<ActivityPage<T>> {
+  const { data } = await api.get(`/app/user/activities?page=${page}`)
+
+  if (Array.isArray(data)) {
+    return { data, current_page: page, last_page: page }
+  }
+
+  return {
+    data: data.data ?? [],
+    current_page: data.current_page ?? data.meta?.current_page ?? page,
+    last_page: data.last_page ?? data.meta?.last_page ?? page,
+  }
 }
 
 export default api
