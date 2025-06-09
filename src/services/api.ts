@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 // Cambia esta constante si tienes otro host o puerto
 const defaultUrl = 'https://fit.tvcoosanjer.com.gt/api'
 
-// const defaultUrl = 'http://192.168.0.33:8000/api'
+//  const defaultUrl = 'http://192.168.1.205:8000/api'
 
 // const defaultUrl = 'http://192.168.0.33:8000/api'
 
