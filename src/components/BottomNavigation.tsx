@@ -18,14 +18,20 @@ export default function BottomNavigation({ state, navigation }: BottomTabBarProp
 
         /* Ícono y texto según la ruta */
         type TabInfo = { icon: any; label: any; iconType: 'fontawesome' | 'fontawesome5' };
-        const { icon, label, iconType }: TabInfo =
-          route.name === 'Dashboard'
-            ? { icon: 'home', label: 'Inicio', iconType: 'fontawesome' }
-            : route.name === 'RegisterActivity'
-            ? { icon: 'running', label: 'Actividad', iconType: 'fontawesome5' }
-            : route.name === 'ReferencesActivity'
-            ? { icon: 'info-circle', label: 'Referencias', iconType: 'fontawesome5' }
-            : { icon: 'sign-out', label: 'Salir', iconType: 'fontawesome' };
+        
+        const tabInfoMap: Record<string, TabInfo> = {
+          Dashboard: { icon: 'home', label: 'Inicio', iconType: 'fontawesome' },
+          RegisterActivity: { icon: 'running', label: 'Actividad', iconType: 'fontawesome5' },
+          ReferencesActivity: { icon: 'info', label: 'Referencias', iconType: 'fontawesome' },
+          Logout: { icon: 'sign-out', label: 'Salir', iconType: 'fontawesome' },
+        };
+
+        const { icon, label, iconType }: TabInfo = tabInfoMap[route.name] || {
+          icon: 'question-circle',
+          label: 'Desconocido',
+          iconType: 'fontawesome',
+        };
+
 
         return (
           <TouchableOpacity
