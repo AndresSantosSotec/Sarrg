@@ -97,11 +97,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1e3a8a',
     padding: 20,
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
   },
   logoContainer: {
     alignItems: 'center',
-    marginTop: 40,
+    marginTop: 200,
+    marginBottom: 50,
   },
   title: {
     fontSize: 36,
