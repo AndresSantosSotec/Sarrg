@@ -22,7 +22,7 @@ export default function BottomNavigation({ state, navigation }: BottomTabBarProp
         const tabInfoMap: Record<string, TabInfo> = {
           Dashboard: { icon: 'home', label: 'Inicio', iconType: 'fontawesome' },
           RegisterActivity: { icon: 'running', label: 'Actividad', iconType: 'fontawesome5' },
-          ReferencesActivity: { icon: 'info', label: 'Referencias', iconType: 'fontawesome' },
+          ReferenceActivity: { icon: 'info-circle', label: 'Referencias', iconType: 'fontawesome5' },
           Logout: { icon: 'sign-out', label: 'Salir', iconType: 'fontawesome' },
         };
 
