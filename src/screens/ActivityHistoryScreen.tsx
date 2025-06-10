@@ -15,10 +15,6 @@ import { MaterialIcons } from '@expo/vector-icons'
 import { fetchUserActivities } from '../services/api'
 import { exerciseIconMap } from '../constants/exerciseIcons'
 
-
-//funcion fetchUserActivities() {
-//   return fetch('http://localhost:3000/api/v1/users/1/activities')
-//     .then(response => response.json())
 interface Activity {
   id: number
   exercise_type: string
@@ -110,7 +106,7 @@ export default function ActivityHistoryScreen() {
               </View>
             </TouchableOpacity>
           ) : (
-            <View style={[styles.photo, styles.iconContainer]}> 
+            <View style={[styles.photo, styles.iconContainer]}>
               <MaterialIcons
                 name={icon.icon as any}
                 size={28}
@@ -240,9 +236,9 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 72,
+    height: 72,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#e0f2fe',
