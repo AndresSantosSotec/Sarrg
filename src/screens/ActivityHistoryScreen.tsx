@@ -7,16 +7,14 @@ import {
   ActivityIndicator,
   RefreshControl,
   Image,
+  Modal,
+  TouchableOpacity,
 } from 'react-native'
 import { useIsFocused } from '@react-navigation/native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { fetchUserActivities } from '../services/api'
 import { exerciseIconMap } from '../constants/exerciseIcons'
 
-
-//funcion fetchUserActivities() {
-//   return fetch('http://localhost:3000/api/v1/users/1/activities')
-//     .then(response => response.json())
 interface Activity {
   id: number
   exercise_type: string
@@ -40,6 +38,7 @@ export default function ActivityHistoryScreen() {
   const [hasMore, setHasMore] = useState(true)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const isFocused = useIsFocused()
 
   const loadActivities = useCallback(
@@ -94,17 +93,28 @@ export default function ActivityHistoryScreen() {
 
     return (
       <View style={styles.item}>
-        {imageUri ? (
-          <Image source={{ uri: imageUri }} style={styles.photo} />
-        ) : (
-          <View style={styles.iconContainer}>
-            <MaterialIcons
-              name={icon.icon as any}
-              size={24}
-              color={icon.color}
-            />
-          </View>
-        )}
+        <View style={styles.photoWrapper}>
+          {imageUri ? (
+            <TouchableOpacity onPress={() => setSelectedImage(imageUri)}>
+              <Image source={{ uri: imageUri }} style={styles.photo} />
+              <View style={styles.iconOverlay}>
+                <MaterialIcons
+                  name={icon.icon as any}
+                  size={20}
+                  color="#fff"
+                />
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <View style={[styles.photo, styles.iconContainer]}>
+              <MaterialIcons
+                name={icon.icon as any}
+                size={28}
+                color={icon.color}
+              />
+            </View>
+          )}
+        </View>
         <View style={styles.itemContent}>
           <Text style={styles.title}>{item.exercise_type}</Text>
           <Text style={styles.subtitle}>
@@ -164,6 +174,21 @@ export default function ActivityHistoryScreen() {
           ) : null
         }
       />
+      {selectedImage && (
+        <Modal
+          visible
+          transparent
+          onRequestClose={() => setSelectedImage(null)}
+        >
+          <TouchableOpacity
+            style={styles.modalBackground}
+            activeOpacity={1}
+            onPress={() => setSelectedImage(null)}
+          >
+            <Image source={{ uri: selectedImage }} style={styles.modalImage} />
+          </TouchableOpacity>
+        </Modal>
+      )}
     </View>
   )
 }
@@ -190,22 +215,30 @@ const styles = StyleSheet.create({
   item: {
     backgroundColor: 'white',
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
   },
+  photoWrapper: { position: 'relative', marginRight: 12 },
   photo: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    marginRight: 12,
+    width: 72,
+    height: 72,
+    borderRadius: 12,
     backgroundColor: '#e5e7eb',
   },
+  iconOverlay: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 10,
+    padding: 2,
+  },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 72,
+    height: 72,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#e0f2fe',
@@ -218,4 +251,16 @@ const styles = StyleSheet.create({
   location: { fontSize: 12, color: '#6b7280' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   footerLoading: { padding: 16 },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: '90%',
+    height: '70%',
+    borderRadius: 12,
+    resizeMode: 'contain',
+  },
 })
