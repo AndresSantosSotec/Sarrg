@@ -16,8 +16,8 @@ export type TabsParamList = {
   Dashboard: undefined;
   Profile: undefined;
   RegisterActivity: undefined;
-  ReferenceActivity: undefined;
   ActivityHistory: undefined;
+  ReferenceActivity: undefined;
   Wallet: undefined;
   Store: undefined;
   Logout: undefined;
@@ -35,8 +35,8 @@ export default function MainTabs() {
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
       <Tab.Screen name="RegisterActivity" component={RegisterActivityScreen} />
-      <Tab.Screen name="ReferenceActivity" component={ReferenceActivityScreen} />
       <Tab.Screen name="ActivityHistory" component={ActivityHistoryScreen} />
+      <Tab.Screen name="ReferenceActivity" component={ReferenceActivityScreen} />
       <Tab.Screen name="Wallet" component={WalletScreen} />
       <Tab.Screen name="Store" component={StoreScreen} />
       <Tab.Screen name="Logout" component={LogoutScreen} />
