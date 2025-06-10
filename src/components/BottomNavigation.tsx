@@ -14,7 +14,7 @@ export default function BottomNavigation({ state, navigation }: BottomTabBarProp
   return (
     <View style={[styles.navbar, { paddingBottom: bottom, height: 64 + bottom }]}>
       {filteredRoutes.map((route, index) => {
-        const isActive = state.index === index;
+        const isActive = route.key === state.routes[state.index].key;
 
         /* Ícono y texto según la ruta */
         type TabInfo = { icon: any; label: any; iconType: 'fontawesome' | 'fontawesome5' };
