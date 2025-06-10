@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert, AppState, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Animated, Alert, AppState, Platform } from 'react-native';
 import { Pedometer } from 'expo-sensors';
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as TaskManager from 'expo-task-manager';
@@ -37,10 +37,7 @@ interface PedometerProps {
 const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeUpdate }) => {
   const [pedometerAvailable, setPedometerAvailable] = useState<boolean | null>(null);
   const [isActive, setIsActive] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const previousSteps = useRef(steps);
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
-  const [isFirstTime, setIsFirstTime] = useState(false);
   const [goal] = useState(10000);
   const [strideLength] = useState(0.70);
   const [dailySteps, setDailySteps] = useState(0);
@@ -52,8 +49,8 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
   const [dailyTotalTime, setDailyTotalTime] = useState(0);
   // Referencias para manejo de tiempo persistente
   const realStartTimeRef = useRef<number | null>(null);
-  const lastPauseTimeRef = useRef<number | null>(null);
   const accumulatedTimeRef = useRef(0);
+  const lastSaveTimeRef = useRef(0);
   const progressAnim = useState(new Animated.Value(0))[0];
   const subscriptionRef = useRef<any>(null);
   const appState = useRef(AppState.currentState);
@@ -112,6 +109,8 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         // Recalcular tiempo y reiniciar UI timer
         calculateElapsedTime();
         startUITimer();
+        await startPedometer();
+        await setupBackgroundFetch();
       }
 
       // 4) STEPS_COUNT
@@ -345,10 +344,14 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     }
   }, [elapsedTime, onTimeUpdate]);
 
-  // useEffect para guardar estado cuando cambia
+  // useEffect para guardar estado con menor frecuencia
   useEffect(() => {
     if (isActive) {
-      saveState();
+      const now = Date.now();
+      if (now - lastSaveTimeRef.current >= 5000) {
+        saveState();
+        lastSaveTimeRef.current = now;
+      }
     }
   }, [isActive, steps, dailySteps, elapsedTime]);
 
@@ -460,7 +463,22 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
 
   // Iniciar podómetro persistente
   const startPedometer = async () => {
-    if (!pedometerAvailable) {
+    // Si aún no sabemos si el podómetro está disponible, consultarlo ahora
+    if (pedometerAvailable === null) {
+      try {
+        const available = await Pedometer.isAvailableAsync();
+        setPedometerAvailable(available);
+        if (!available) {
+          Alert.alert('Error', 'El podómetro no está disponible en este dispositivo');
+          return;
+        }
+      } catch (error) {
+        console.log('Error comprobando disponibilidad del podómetro:', error);
+        Alert.alert('Error', 'No se pudo verificar el podómetro');
+        return;
+      }
+    } else if (!pedometerAvailable) {
+      Alert.alert('Error', 'El podómetro no está disponible en este dispositivo');
       return;
     }
 

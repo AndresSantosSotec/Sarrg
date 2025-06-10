@@ -8,7 +8,7 @@ export default function BottomNavigation({ state, navigation }: BottomTabBarProp
   const { bottom } = useSafeAreaInsets();
 
   // Filtrar solo las rutas que queremos mostrar (sin Profile)
-  const allowedRoutes = ['Dashboard', 'RegisterActivity', 'ReferenceActivity', 'Logout'];
+  const allowedRoutes = ['Dashboard', 'RegisterActivity', 'ReferenceActivity','ActivityHistory', 'Logout'];
   const filteredRoutes = state.routes.filter(route => allowedRoutes.includes(route.name));
 
   return (
@@ -22,6 +22,7 @@ export default function BottomNavigation({ state, navigation }: BottomTabBarProp
         const tabInfoMap: Record<string, TabInfo> = {
           Dashboard: { icon: 'home', label: 'Inicio', iconType: 'fontawesome' },
           RegisterActivity: { icon: 'running', label: 'Actividad', iconType: 'fontawesome5' },
+          ActivityHistory: { icon: 'history', label: 'Historial', iconType: 'fontawesome' },
           ReferenceActivity: { icon: 'info-circle', label: 'Referencias', iconType: 'fontawesome5' },
           Logout: { icon: 'sign-out', label: 'Salir', iconType: 'fontawesome' },
         };

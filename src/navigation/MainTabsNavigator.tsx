@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import DashboardScreen from '../screens/DashboardScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import RegisterActivityScreen from '../screens/RegisterActivityScreen';
+import ActivityHistoryScreen from '../screens/ActivityHistoryScreen';
 import WalletScreen from '../screens/WalletScreen';
 import StoreScreen from '../screens/StoreScreen';
 import LogoutScreen from '../screens/LogoutScreen';
@@ -16,6 +17,7 @@ export type TabsParamList = {
   Profile: undefined;
   RegisterActivity: undefined;
   ReferenceActivity: undefined;
+  ActivityHistory: undefined;
   Wallet: undefined;
   Store: undefined;
   Logout: undefined;
@@ -34,6 +36,7 @@ export default function MainTabs() {
       <Tab.Screen name="Profile" component={ProfileScreen} />
       <Tab.Screen name="RegisterActivity" component={RegisterActivityScreen} />
       <Tab.Screen name="ReferenceActivity" component={ReferenceActivityScreen} />
+      <Tab.Screen name="ActivityHistory" component={ActivityHistoryScreen} />
       <Tab.Screen name="Wallet" component={WalletScreen} />
       <Tab.Screen name="Store" component={StoreScreen} />
       <Tab.Screen name="Logout" component={LogoutScreen} />
