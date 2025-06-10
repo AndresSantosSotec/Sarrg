@@ -32,15 +32,21 @@ interface PedometerProps {
   steps: number;
   setSteps: React.Dispatch<React.SetStateAction<number>>;
   onTimeUpdate?: (seconds: number) => void;
+  dailyGoal?: number;
 }
 
-const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeUpdate }) => {
+const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeUpdate, dailyGoal }) => {
   const [pedometerAvailable, setPedometerAvailable] = useState<boolean | null>(null);
   const [isActive, setIsActive] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
-  const [goal] = useState(10000);
+  const [goal, setGoal] = useState(10000);
   const [strideLength] = useState(0.70);
   const [dailySteps, setDailySteps] = useState(0);
+  useEffect(() => {
+    if (dailyGoal) {
+      setGoal(dailyGoal);
+    }
+  }, [dailyGoal]);
   const [lastResetDate, setLastResetDate] = useState(new Date().toDateString());
   // Estados del temporizador mejorados
   const [elapsedTime, setElapsedTime] = useState(0);
