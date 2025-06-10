@@ -18,6 +18,7 @@ import { AuthContext } from '../contexts/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './styles/DashboardScreen.styles';
+import BmiScale from '../components/BmiScale';
 
 const { width } = Dimensions.get('window');
 
@@ -357,6 +358,8 @@ const uploadPhoto = async () => {
             </Text>
           </View>
         </View>
+
+        <BmiScale bmi={parseFloat(collaborator.indice_masa_corporal.toString())} />
 
         {/* Personal Information Card */}
         <View style={styles.infoCard}>

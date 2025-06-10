@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   SafeAreaView, View, Text, ScrollView, StyleSheet,
   TouchableOpacity, Alert, Image, TextInput, Platform,
@@ -10,6 +10,7 @@ import * as Location from 'expo-location';
 import * as FileSystem from 'expo-file-system';
 import { MaterialIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
+import { AuthContext } from '../contexts/AuthContext';
 
 import PedometerComponent from '../components/Pedometer';
 import { styles } from './styles/RegisterActivityScreen.styles';
@@ -25,6 +26,15 @@ export default function RegisterActivityScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [notes, setNotes] = useState('');
   const [steps, setSteps] = useState(0);
+
+  const { collaborator } = useContext(AuthContext);
+  const getStepGoal = (level: string) => {
+    if (level === 'KoalaFit') return 3000;
+    if (level === 'JaguarFit') return 6000;
+    if (level === 'HalcónFit') return 10000;
+    return 10000;
+  };
+  const stepGoal = getStepGoal(collaborator?.nivel_asignado || '');
 
 
   // Estados para modales de selección
@@ -419,6 +429,7 @@ export default function RegisterActivityScreen() {
             <PedometerComponent
               steps={steps}
               setSteps={setSteps}
+              dailyGoal={stepGoal}
             />
           </View>
           {/* 2. Sección de Calorías (separada) */}
