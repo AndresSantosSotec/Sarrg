@@ -8,7 +8,7 @@ export default function BottomNavigation({ state, navigation }: BottomTabBarProp
   const { bottom } = useSafeAreaInsets();
 
   // Filtrar solo las rutas que queremos mostrar (sin Profile)
-  const allowedRoutes = ['Dashboard', 'RegisterActivity', 'ReferencesActivity', 'Logout'];
+  const allowedRoutes = ['Dashboard', 'RegisterActivity', 'ReferenceActivity', 'Logout'];
   const filteredRoutes = state.routes.filter(route => allowedRoutes.includes(route.name));
 
   return (
