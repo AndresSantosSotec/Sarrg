@@ -39,11 +39,10 @@ const COLORS = {
   danger: '#ff7875',
 };
 
-// Función para calcular peso objetivo basado en IMC saludable (21.5)
-const calculateTargetWeight = (altura: number) => {
+// Función para calcular peso objetivo basado en IMC (por defecto 24)
+const calculateTargetWeight = (altura: number, imc = 24) => {
   const alturaMetros = altura / 100;
-  const imcObjetivo = 21.5; // IMC ideal en el rango normal (18.5-24.9)
-  return Math.round(imcObjetivo * alturaMetros * alturaMetros);
+  return Math.round(imc * alturaMetros * alturaMetros);
 };
 
 // Función para convertir kg a libras
@@ -153,7 +152,12 @@ const uploadPhoto = async () => {
   // Cálculos para peso objetivo y conversiones
   const pesoActualKg = parseFloat(collaborator.peso.toString());
   const pesoActualLbs = kgToLbs(pesoActualKg);
-  const pesoObjetivoKg = calculateTargetWeight(parseFloat(collaborator.altura.toString()));
+  const imcTarget = collaborator.IMC_objetivo
+    ? parseFloat(collaborator.IMC_objetivo.toString())
+    : 24;
+  const pesoObjetivoKg = collaborator.peso_objetivo
+    ? parseFloat(collaborator.peso_objetivo.toString())
+    : calculateTargetWeight(parseFloat(collaborator.altura.toString()), imcTarget);
   const pesoObjetivoLbs = kgToLbs(pesoObjetivoKg);
   const imcStatus = getIMCStatus(parseFloat(collaborator.indice_masa_corporal.toString()));
   const diferenciaPeso = pesoActualKg - pesoObjetivoKg;

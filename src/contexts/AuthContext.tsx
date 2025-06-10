@@ -50,6 +50,8 @@ export interface Collaborator {
   photo_path: string | null;
   photo_url: string | null;
   coin_fits: number;
+  IMC_objetivo?: string;
+  peso_objetivo?: string;
   created_at: string;
   updated_at: string;
   user: User;

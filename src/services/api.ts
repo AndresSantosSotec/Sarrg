@@ -3,11 +3,17 @@ import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 // Cambia esta constante si tienes otro host o puerto
-const defaultUrl = 'https://fit.tvcoosanjer.com.gt/api'
+ const defaultUrl = 'https://fit.tvcoosanjer.com.gt/api'
 
-//  const defaultUrl = 'http://192.168.1.205:8000/api'
+
+ 
+//entono  de desarollo yd e testing
+// const defaultUrl = 'http://192.168.1.205:8000/api'
+
 
 // const defaultUrl = 'http://192.168.0.33:8000/api'
+//local 
+// const defaultUrl = 'http://192.168.1.99:8000/api'
 
 const api = axios.create({
   baseURL: defaultUrl,
@@ -43,6 +49,26 @@ export async function login(email: string, password: string) {
  */
 export async function logout() {
   await AsyncStorage.multiRemove(['auth_token', 'user_data'])
+}
+
+export interface ActivityPage<T> {
+  data: T[]
+  current_page: number
+  last_page: number
+}
+
+export async function fetchUserActivities<T>(page = 1): Promise<ActivityPage<T>> {
+  const { data } = await api.get(`/app/user/activities?page=${page}`)
+
+  if (Array.isArray(data)) {
+    return { data, current_page: page, last_page: page }
+  }
+
+  return {
+    data: data.data ?? [],
+    current_page: data.current_page ?? data.meta?.current_page ?? page,
+    last_page: data.last_page ?? data.meta?.last_page ?? page,
+  }
 }
 
 export default api
