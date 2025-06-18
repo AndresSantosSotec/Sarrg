@@ -11,20 +11,21 @@ interface TeamInfoModalProps {
 const TEAM_INFO: Record<string, { desc: string; items: string[] }> = {
   KoalaFit: {
     desc: "Ideal para quienes se inician en la actividad física y quieren adquirir hábitos saludables.",
-    items: ["3,000 pasos diarios", "20 minutos de actividad", "Hasta 10 CoinFits por día"]
+    items: ["3,000 pasos diarios", "20 minutos de actividad", "Hasta 10 CoinFits por día"],
   },
   JaguarFit: {
     desc: "Para quienes tienen experiencia moderada y buscan un reto intermedio dentro del plan de bienestar.",
-    items: ["6,000 pasos diarios", "30 minutos de actividad", "10 CoinFits por día"]
+    items: ["6,000 pasos diarios", "30 minutos de actividad", "10 CoinFits por día"],
   },
   HalcónFit: {
     desc: "Pensado para personas activas que quieren desafiar su condición física al máximo.",
-    items: ["10,000 pasos diarios", "45 minutos de actividad", "10 CoinFits por día"]
-  }
+    items: ["10,000 pasos diarios", "45 minutos de actividad", "10 CoinFits por día"],
+  },
 };
 
 export default function TeamInfoModal({ visible, team, onClose }: TeamInfoModalProps) {
   const info = TEAM_INFO[team];
+
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -35,12 +36,18 @@ export default function TeamInfoModal({ visible, team, onClose }: TeamInfoModalP
               <MaterialIcons name="close" size={24} color="#64748b" />
             </TouchableOpacity>
           </View>
+
           {info && (
             <>
               <Text style={styles.description}>{info.desc}</Text>
               {info.items.map(item => (
                 <View key={item} style={styles.itemRow}>
-                  <MaterialIcons name="check-circle" size={20} color="#10b981" style={styles.itemIcon} />
+                  <MaterialIcons
+                    name="check-circle"
+                    size={20}
+                    color="#10b981"
+                    style={styles.itemIcon}
+                  />
                   <Text style={styles.itemText}>{item}</Text>
                 </View>
               ))}

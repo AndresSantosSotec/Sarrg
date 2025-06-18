@@ -10,9 +10,9 @@ const RULES = [
   { icon: 'arrow-upward', text: 'Supera tu meta personal y obtén +3 CoinFits.' },
   {
     icon: 'calendar-today',
-    text: 'Cumple tus metas 5 días o más en la semana y recibe un bono de +10 CoinFits.'
+    text: 'Cumple tus metas 5 días o más en la semana y recibe un bono de +10 CoinFits.',
   },
-  { icon: 'block', text: 'Máximo 10 CoinFits por día.' }
+  { icon: 'block', text: 'Máximo 10 CoinFits por día.' },
 ];
 
 export default function CoinRulesCard() {
@@ -29,10 +29,18 @@ export default function CoinRulesCard() {
         </LinearGradient>
         <Text style={dashStyles.cardTitle}>Reglas para obtener CoinFits</Text>
       </View>
+
       {RULES.map(rule => (
         <View key={rule.text} style={dashStyles.ruleRow}>
-          <MaterialIcons name={rule.icon as any} size={20} color={COLORS.success} style={dashStyles.ruleIcon} />
-          <Text style={[dashStyles.rowLabel, { flex: 1 }]}>{rule.text}</Text>
+          <MaterialIcons
+            name={rule.icon as any}
+            size={20}
+            color={COLORS.success}
+            style={dashStyles.ruleIcon}
+          />
+          <Text style={[dashStyles.rowLabel, { flex: 1, color: COLORS.text }]}>
+            {rule.text}
+          </Text>
         </View>
       ))}
     </View>
