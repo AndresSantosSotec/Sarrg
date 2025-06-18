@@ -8,17 +8,24 @@ interface TeamInfoModalProps {
   onClose: () => void;
 }
 
-const TEAM_INFO: Record<string, string> = {
-  KoalaFit:
-    'Ideal para quienes se inician en la actividad f\u00edsica. Requiere 3,000 pasos y 20 minutos de actividad diaria. Te permite acumular hasta 10 CoinFits cada d\u00eda.',
-  JaguarFit:
-    'Para quienes buscan un reto intermedio. Debes completar 6,000 pasos y 30 minutos de actividad por d\u00eda. Mantienes la posibilidad de ganar 10 CoinFits diarios.',
-  Halc\u00f3nFit:
-    'Pensado para los m\u00e1s activos. Exige 10,000 pasos y 45 minutos de actividad al d\u00eda, obteniendo hasta 10 CoinFits por jornada.',
+const TEAM_INFO: Record<string, { desc: string; items: string[] }> = {
+  KoalaFit: {
+    desc: "Ideal para quienes se inician en la actividad física y quieren adquirir hábitos saludables.",
+    items: ["3,000 pasos diarios", "20 minutos de actividad", "Hasta 10 CoinFits por día"],
+  },
+  JaguarFit: {
+    desc: "Para quienes tienen experiencia moderada y buscan un reto intermedio dentro del plan de bienestar.",
+    items: ["6,000 pasos diarios", "30 minutos de actividad", "10 CoinFits por día"],
+  },
+  HalcónFit: {
+    desc: "Pensado para personas activas que quieren desafiar su condición física al máximo.",
+    items: ["10,000 pasos diarios", "45 minutos de actividad", "10 CoinFits por día"],
+  },
 };
 
 export default function TeamInfoModal({ visible, team, onClose }: TeamInfoModalProps) {
-  const description = TEAM_INFO[team] || '';
+  const info = TEAM_INFO[team];
+
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -29,7 +36,23 @@ export default function TeamInfoModal({ visible, team, onClose }: TeamInfoModalP
               <MaterialIcons name="close" size={24} color="#64748b" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.text}>{description}</Text>
+
+          {info && (
+            <>
+              <Text style={styles.description}>{info.desc}</Text>
+              {info.items.map(item => (
+                <View key={item} style={styles.itemRow}>
+                  <MaterialIcons
+                    name="check-circle"
+                    size={20}
+                    color="#10b981"
+                    style={styles.itemIcon}
+                  />
+                  <Text style={styles.itemText}>{item}</Text>
+                </View>
+              ))}
+            </>
+          )}
         </View>
       </View>
     </Modal>
@@ -59,8 +82,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1e293b',
   },
-  text: {
-    fontSize: 16,
+  description: {
+    fontSize: 15,
+    color: '#475569',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  itemIcon: {
+    marginRight: 8,
+    marginTop: 2,
+  },
+  itemText: {
+    fontSize: 15,
     color: '#1e293b',
+    flex: 1,
+    lineHeight: 20,
   },
 });

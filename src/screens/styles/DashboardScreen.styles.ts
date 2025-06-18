@@ -445,6 +445,17 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
+  // === RULES LIST ===
+  ruleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  ruleIcon: {
+    marginRight: 8,
+    marginTop: 2,
+  },
+
   // === LEVEL CARD ===
   levelCard: {
     backgroundColor: '#f0f8f0',
