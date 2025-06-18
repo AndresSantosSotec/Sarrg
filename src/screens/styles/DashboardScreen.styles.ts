@@ -394,6 +394,11 @@ export const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 20,
   },
+  teamLink: {
+    color: COLORS.success,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
 
   // === INFO ROWS ===
   infoRow: {
@@ -438,6 +443,17 @@ export const styles = StyleSheet.create({
     color: COLORS.accent,
     fontSize: 14,
     fontWeight: '700',
+  },
+
+  // === RULES LIST ===
+  ruleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  ruleIcon: {
+    marginRight: 8,
+    marginTop: 2,
   },
 
   // === LEVEL CARD ===
