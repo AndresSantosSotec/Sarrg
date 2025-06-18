@@ -19,6 +19,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './styles/DashboardScreen.styles';
 import BmiScale from '../components/BmiScale';
+import CoinRulesCard from '../components/CoinRulesCard';
+import TeamInfoModal from '../components/TeamInfoModal';
 
 const { width } = Dimensions.get('window');
 
@@ -73,6 +75,9 @@ export default function DashboardScreen() {
   const [confPwd, setConfPwd] = useState('');
   const [changing, setChanging] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+
+  const [showTeamInfo, setShowTeamInfo] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState('');
 
   // Picker de galería
   const pickImage = async () => {
@@ -361,6 +366,8 @@ const uploadPhoto = async () => {
 
         <BmiScale bmi={parseFloat(collaborator.indice_masa_corporal.toString())} />
 
+        <CoinRulesCard />
+
         {/* Personal Information Card */}
         <View style={styles.infoCard}>
           <View style={styles.cardHeader}>
@@ -488,7 +495,18 @@ const uploadPhoto = async () => {
             >
               <MaterialIcons name="fitness-center" size={22} color={COLORS.white} />
             </LinearGradient>
-            <Text style={styles.cardTitle}>Plan de Bienestar: {collaborator.nivel_asignado}</Text>
+            <Text style={styles.cardTitle}>
+              Plan de Bienestar:
+              <Text
+                style={styles.teamLink}
+                onPress={() => {
+                  setSelectedTeam(collaborator.nivel_asignado);
+                  setShowTeamInfo(true);
+                }}
+              >
+                {' '}{collaborator.nivel_asignado}
+              </Text>
+            </Text>
           </View>
 
           <View style={styles.levelDetails}>
@@ -529,6 +547,11 @@ const uploadPhoto = async () => {
           </Text>
         </View>
       </ScrollView>
+      <TeamInfoModal
+        visible={showTeamInfo}
+        team={selectedTeam}
+        onClose={() => setShowTeamInfo(false)}
+      />
     </View>
   );
 }

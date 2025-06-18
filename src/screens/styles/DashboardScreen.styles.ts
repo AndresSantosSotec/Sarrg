@@ -394,6 +394,11 @@ export const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 20,
   },
+  teamLink: {
+    color: COLORS.success,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
 
   // === INFO ROWS ===
   infoRow: {
