@@ -153,6 +153,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   // Función de login: guarda token, carga user y collaborator
   const login = async (email: string, password: string) => {
+    setLoading(true);
+    setUser(null);
+    setCollaborator(null);
     const res = await api.post<LoginResponse>('/app/login', {
       email,
       password,
@@ -169,6 +172,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
     // 3) Carga colaborador
     await loadCollaborator();
+
+    setLoading(false);
   };
 
   // Función de logout: borra todo
