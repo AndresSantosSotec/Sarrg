@@ -4,7 +4,7 @@
     "slug": "coosanjerfit",
     "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/logo.png",
+    "icon": "./assets/fitappios.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -16,15 +16,15 @@
       "**/*"
     ],
     "ios": {
+      "buildNumber": "6",
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.coosanjerfit",
+      "bundleIdentifier": "com.prolink.coosanjerfit",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSMotionUsageDescription": "Esta app necesita acceso a los sensores de movimiento para contar tus pasos y medir tu actividad física.",
-        "UIBackgroundModes": [
-          "background-fetch",
-          "background-processing"
-        ]
+        "NSPhotoLibraryUsageDescription": "Necesitamos acceso a tu galería para que puedas subir fotos de perfil o imágenes relacionadas con tu actividad física y progreso.",
+        "NSMotionUsageDescription": "La app utiliza los sensores de movimiento para registrar tus pasos y monitorear tu actividad física con el fin de brindarte un seguimiento personalizado.",
+        "NSCameraUsageDescription": "Se requiere acceso a la cámara para capturar evidencia de tus entrenamientos, registrar tu progreso físico y facilitar funciones relacionadas con rutinas o retos.",
+        "NSLocationWhenInUseUsageDescription": "Necesitamos acceder a tu ubicación actual para registrar actividades físicas y mostrar contenido personalizado según tu posición."
       }
     },
     "android": {
@@ -42,7 +42,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/Llogo_fit_icon.png"
+      "favicon": "./assets/logo_fit_icon.png"
     },
     "plugins": [
       [
@@ -54,9 +54,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "f3b0853a-325f-4ecc-8794-c1af1dd60e2a"
+        "projectId": "2644c7b8-c85a-4761-b183-9bf9e89e2ae8"
       }
     },
-    "owner": "andresdev2905"
+    "owner": "ebsoltech"
   }
 }
