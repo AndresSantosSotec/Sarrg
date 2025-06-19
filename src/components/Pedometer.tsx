@@ -116,6 +116,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
       // 3) IS_ACTIVE
       if (savedIsActive === 'true') {
         setIsActive(true);
+        isActiveRef.current = true;
         // Recalcular tiempo y reiniciar UI timer
         calculateElapsedTime();
         startUITimer();
