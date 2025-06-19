@@ -26,6 +26,8 @@ export default function RegisterActivityScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [notes, setNotes] = useState('');
   const [steps, setSteps] = useState(0);
+  const [surfaceType, setSurfaceType] = useState('');
+  const [difficultyLevel, setDifficultyLevel] = useState('');
 
   const { collaborator } = useContext(AuthContext);
   const getStepGoal = (level: string) => {
@@ -236,6 +238,10 @@ export default function RegisterActivityScreen() {
       form.append('calories', calories);
       form.append('notes', notes);
       form.append('steps', steps.toString());
+      if (exerciseType === 'Trail Running') {
+        form.append('surface_type', surfaceType);
+        form.append('difficulty_level', difficultyLevel);
+      }
 
       if (deviceLocation) {
         const [lat, lng] = deviceLocation.split(',').map(s => s.trim());
@@ -282,6 +288,8 @@ export default function RegisterActivityScreen() {
     setDeviceLocation(null);
     setNotes('');
     setSteps(0);
+    setSurfaceType('');
+    setDifficultyLevel('');
   };
 
   const getExerciseIcon = (type: string) => {
@@ -381,6 +389,7 @@ export default function RegisterActivityScreen() {
                 </View>
               </TouchableOpacity>
             </View>
+
 
 
             {/* Notas */}
