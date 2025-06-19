@@ -32,15 +32,22 @@ interface PedometerProps {
   steps: number;
   setSteps: React.Dispatch<React.SetStateAction<number>>;
   onTimeUpdate?: (seconds: number) => void;
+  dailyGoal?: number;
 }
 
-const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeUpdate }) => {
+const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeUpdate, dailyGoal }) => {
   const [pedometerAvailable, setPedometerAvailable] = useState<boolean | null>(null);
   const [isActive, setIsActive] = useState(false);
+  const isActiveRef = useRef(isActive);
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
-  const [goal] = useState(10000);
+  const [goal, setGoal] = useState(10000);
   const [strideLength] = useState(0.70);
   const [dailySteps, setDailySteps] = useState(0);
+  useEffect(() => {
+    if (dailyGoal) {
+      setGoal(dailyGoal);
+    }
+  }, [dailyGoal]);
   const [lastResetDate, setLastResetDate] = useState(new Date().toDateString());
   // Estados del temporizador mejorados
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -57,6 +64,9 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
   const lastStepsRef = useRef(0);
   const sessionStartSteps = useRef(0);
   const uiTimerRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    isActiveRef.current = isActive;
+  }, [isActive]);
   // Storage keys
   const STORAGE_KEYS = {
     SESSION_START_TIME: 'pedometer_session_start_time',
@@ -106,6 +116,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
       // 3) IS_ACTIVE
       if (savedIsActive === 'true') {
         setIsActive(true);
+        isActiveRef.current = true;
         // Recalcular tiempo y reiniciar UI timer
         calculateElapsedTime();
         startUITimer();
@@ -131,7 +142,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
 
   // Calcular tiempo transcurrido basado en timestamps reales
   const calculateElapsedTime = () => {
-    if (!realStartTimeRef.current || !isActive) return 0;
+    if (!realStartTimeRef.current || !isActiveRef.current) return 0;
 
     const now = Date.now();
     const rawElapsed = Math.floor((now - realStartTimeRef.current) / 1000);
@@ -155,7 +166,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     }
 
     uiTimerRef.current = setInterval(() => {
-      if (isActive && realStartTimeRef.current) {
+      if (isActiveRef.current && realStartTimeRef.current) {
         calculateElapsedTime();
       }
     }, 1000);
@@ -402,17 +413,23 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         // App vuelve al primer plano
         console.log(`[AppState] App volvió al primer plano @ ${new Date().toLocaleTimeString()}`);
 
-        if (isActive && realStartTimeRef.current) {
+        if (isActiveRef.current && realStartTimeRef.current) {
           // Recalcular tiempo transcurrido
           calculateElapsedTime();
           // Reiniciar timer de UI
           startUITimer();
+          // Verificar si el podómetro sigue activo, si no, reiniciarlo
+          if (!subscriptionRef.current) {
+            startPedometer();
+          }
+          // Asegurar que la tarea en background esté registrada
+          setupBackgroundFetch();
         }
       } else if (nextAppState.match(/inactive|background/)) {
         // App va al fondo
         console.log(`[AppState] App fue enviada a segundo plano @ ${new Date().toLocaleTimeString()}`);
 
-        if (isActive) {
+        if (isActiveRef.current) {
           // Solo detener el timer de UI, NO el tracking de tiempo
           stopUITimer();
           // Guardar estado actual
@@ -469,16 +486,16 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         const available = await Pedometer.isAvailableAsync();
         setPedometerAvailable(available);
         if (!available) {
-          Alert.alert('Error', 'El podómetro no está disponible en este dispositivo');
+          Alert.alert('Error', 'El contador de pasos no está disponible en este dispositivo');
           return;
         }
       } catch (error) {
         console.log('Error comprobando disponibilidad del podómetro:', error);
-        Alert.alert('Error', 'No se pudo verificar el podómetro');
+        Alert.alert('Error', 'No se pudo verificar el contador de pasos');
         return;
       }
     } else if (!pedometerAvailable) {
-      Alert.alert('Error', 'El podómetro no está disponible en este dispositivo');
+      Alert.alert('Error', 'El contador de pasos no está disponible en este dispositivo');
       return;
     }
 
@@ -486,7 +503,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     if (permissionGranted === false) {
       Alert.alert(
         'Permiso denegado',
-        'Activa Movimiento y Actividad en Configuración para usar el podómetro.'
+        'Activa Movimiento y Actividad en Configuración para usar el contador de pasos.'
       );
       return;
     }
@@ -521,11 +538,11 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         console.log('Pedometer started successfully');
       } catch (error) {
         console.log('Error iniciando podómetro:', error);
-        Alert.alert('Error', 'No se pudo iniciar el podómetro');
+        Alert.alert('Error', 'No se pudo iniciar el contador de pasos');
       }
     } catch (error) {
       console.log('Error starting pedometer:', error);
-      Alert.alert('Error', 'No se pudo iniciar el podómetro');
+      Alert.alert('Error', 'No se pudo iniciar el contador de pasos');
     }
   };
 
@@ -567,6 +584,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
       setElapsedTime(0);
       setTotalSessionTime(0);
       setIsActive(true);
+      isActiveRef.current = true;
 
       // 4) Iniciar el temporizador de pantalla YA
       startUITimer();
@@ -587,7 +605,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
       console.log('Pedometer session started at:', new Date(now).toLocaleTimeString());
     } catch (error) {
       console.log('Error starting pedometer session:', error);
-      Alert.alert('Error', 'No se pudo iniciar el podómetro');
+      Alert.alert('Error', 'No se pudo iniciar el contador de pasos');
       setIsActive(false);
     }
   };
@@ -609,6 +627,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
 
     // 3) Marca inactivo y limpia timestamps
     setIsActive(false);
+    isActiveRef.current = false;
     realStartTimeRef.current = null;
     setSessionStartTime(null);
 
@@ -690,11 +709,13 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
               // Inicializar tiempo desde 0 y empezar timer
               setElapsedTime(0);
               setTotalSessionTime(0);
+              isActiveRef.current = true;
               startUITimer();
             } else {
               // Si no estaba activo, limpiar timestamps
               realStartTimeRef.current = null;
               setSessionStartTime(null);
+              isActiveRef.current = false;
             }
           }
         }
@@ -718,7 +739,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     // Limpiar todo el storage
     await AsyncStorage.multiRemove(Object.values(STORAGE_KEYS));
 
-    if (isActive) {
+    if (isActiveRef.current) {
       setTimeout(async () => {
         const now = Date.now();
         realStartTimeRef.current = now;
@@ -764,7 +785,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
   if (pedometerAvailable === null) {
     return (
       <View style={styles.container}>
-        <Text style={styles.loadingText}>Verificando podómetro...</Text>
+        <Text style={styles.loadingText}>Verificando contador de pasos...</Text>
       </View>
     );
   }
@@ -772,7 +793,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
   if (pedometerAvailable === false) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Podómetro no disponible en este dispositivo</Text>
+        <Text style={styles.errorText}>Contador de pasos no disponible en este dispositivo</Text>
       </View>
     );
   }
@@ -783,10 +804,10 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
       {permissionGranted === false && (
         <View style={styles.permissionWarning}>
           <Text style={styles.permissionText}>
-            ⚠️ Se necesitan permisos de actividad física para usar el podómetro.
+            ⚠️ Se necesitan permisos de actividad física para usar el contador de pasos.
           </Text>
           <Text style={styles.permissionSubtext}>
-            Presiona "Iniciar Podómetro" para otorgar permisos.
+            Presiona "Iniciar Contador de pasos" para otorgar permisos.
           </Text>
         </View>
       )}
@@ -795,7 +816,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
       <View style={styles.statusContainer}>
         <View style={[styles.statusIndicator, { backgroundColor: isActive ? '#22c55e' : '#ef4444' }]} />
         <Text style={styles.statusText}>
-          {isActive ? 'Podómetro Activo' : 'Podómetro Detenido'}
+          {isActive ? 'Contador de pasos Activo' : 'Contador de pasos Detenido'}
         </Text>
       </View>
 
@@ -893,12 +914,12 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
               onPress={handleStart}
             >
               <Text style={styles.buttonText}>
-                {permissionGranted === false ? 'Dar Permisos e Iniciar' : 'Iniciar Podómetro'}
+                {permissionGranted === false ? 'Dar Permisos e Iniciar' : 'Iniciar Contador de pasos'}
               </Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={[styles.button, styles.stopBtn]} onPress={handleStop}>
-              <Text style={styles.buttonText}>Detener Podómetro</Text>
+              <Text style={styles.buttonText}>Detener Contador</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -925,7 +946,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
             • Habilita "Background App Refresh" en Configuración
           </Text>
           <Text style={styles.instructionsText}>
-            • El podómetro seguirá contando incluso con la pantalla apagada
+            • El contador de pasos seguirá contando incluso con la pantalla apagada
           </Text>
         </View>
       )}

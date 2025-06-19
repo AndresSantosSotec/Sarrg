@@ -12,12 +12,15 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../contexts/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './styles/DashboardScreen.styles';
+import BmiScale from '../components/BmiScale';
+import CoinRulesCard from '../components/CoinRulesCard';
+import TeamInfoModal from '../components/TeamInfoModal';
 
 const { width } = Dimensions.get('window');
 
@@ -72,6 +75,9 @@ export default function DashboardScreen() {
   const [confPwd, setConfPwd] = useState('');
   const [changing, setChanging] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+
+  const [showTeamInfo, setShowTeamInfo] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState('');
 
   // Picker de galería
   const pickImage = async () => {
@@ -358,6 +364,10 @@ const uploadPhoto = async () => {
           </View>
         </View>
 
+        <BmiScale bmi={parseFloat(collaborator.indice_masa_corporal.toString())} />
+
+        <CoinRulesCard />
+
         {/* Personal Information Card */}
         <View style={styles.infoCard}>
           <View style={styles.cardHeader}>
@@ -485,32 +495,43 @@ const uploadPhoto = async () => {
             >
               <MaterialIcons name="fitness-center" size={22} color={COLORS.white} />
             </LinearGradient>
-            <Text style={styles.cardTitle}>Plan de Bienestar: {collaborator.nivel_asignado}</Text>
+            <Text style={styles.cardTitle}>
+              Plan de Bienestar:
+              <Text
+                style={styles.teamLink}
+                onPress={() => {
+                  setSelectedTeam(collaborator.nivel_asignado);
+                  setShowTeamInfo(true);
+                }}
+              >
+                {' '}{collaborator.nivel_asignado}
+              </Text>
+            </Text>
           </View>
 
           <View style={styles.levelDetails}>
             {collaborator.nivel_asignado === 'HalcónFit' && (
               <>
-                <LevelDetail icon="directions-walk" text="10,000 pasos diarios" />
-                <LevelDetail icon="timer" text="45 min de actividad" />
-                <LevelDetail icon="stars" text="10 CoinFits por día" />
-                <LevelDetail icon="emoji-events" text="Nivel avanzado" />
+                <LevelDetail icon={<MaterialCommunityIcons name="footprint-outline" size={18} color={COLORS.success} />} text="10,000 pasos diarios" />
+                <LevelDetail icon={<MaterialIcons name="timer" size={18} color={COLORS.success} />} text="45 min de actividad" />
+                <LevelDetail icon={<MaterialIcons name="stars" size={18} color={COLORS.success} />} text="10 CoinFits por día" />
+                <LevelDetail icon={<MaterialIcons name="emoji-events" size={18} color={COLORS.success} />} text="Nivel avanzado" />
               </>
             )}
             {collaborator.nivel_asignado === 'JaguarFit' && (
               <>
-                <LevelDetail icon="directions-walk" text="6,000 pasos diarios" />
-                <LevelDetail icon="timer" text="30 min de actividad" />
-                <LevelDetail icon="stars" text="5 CoinFits por día" />
-                <LevelDetail icon="emoji-events" text="Nivel intermedio" />
+                <LevelDetail icon={<MaterialCommunityIcons name="footprint-outline" size={18} color={COLORS.success} />} text="6,000 pasos diarios" />
+                <LevelDetail icon={<MaterialIcons name="timer" size={18} color={COLORS.success} />} text="30 min de actividad" />
+                <LevelDetail icon={<MaterialIcons name="stars" size={18} color={COLORS.success} />} text="5 CoinFits por día" />
+                <LevelDetail icon={<MaterialIcons name="emoji-events" size={18} color={COLORS.success} />} text="Nivel intermedio" />
               </>
             )}
             {collaborator.nivel_asignado === 'KoalaFit' && (
               <>
-                <LevelDetail icon="directions-walk" text="3,000 pasos diarios" />
-                <LevelDetail icon="timer" text="20 min de actividad" />
-                <LevelDetail icon="stars" text="2 CoinFits por día" />
-                <LevelDetail icon="emoji-events" text="Nivel básico" />
+                <LevelDetail icon={<MaterialCommunityIcons name="footprint-outline" size={18} color={COLORS.success} />} text="3,000 pasos diarios" />
+                <LevelDetail icon={<MaterialIcons name="timer" size={18} color={COLORS.success} />} text="20 min de actividad" />
+                <LevelDetail icon={<MaterialIcons name="stars" size={18} color={COLORS.success} />} text="2 CoinFits por día" />
+                <LevelDetail icon={<MaterialIcons name="emoji-events" size={18} color={COLORS.success} />} text="Nivel básico" />
               </>
             )}
           </View>
@@ -526,6 +547,11 @@ const uploadPhoto = async () => {
           </Text>
         </View>
       </ScrollView>
+      <TeamInfoModal
+        visible={showTeamInfo}
+        team={selectedTeam}
+        onClose={() => setShowTeamInfo(false)}
+      />
     </View>
   );
 }
@@ -562,11 +588,11 @@ const LevelDetail = ({
   icon,
   text
 }: {
-  icon: React.ComponentProps<typeof MaterialIcons>['name'],
+  icon: React.ReactNode;
   text: string
 }) => (
   <View style={styles.levelDetail}>
-    <MaterialIcons name={icon} size={18} color={COLORS.success} />
+    {icon}
     <Text style={styles.levelDetailText}>{text}</Text>
   </View>
 );
