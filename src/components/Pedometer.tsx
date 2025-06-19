@@ -400,6 +400,12 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
           calculateElapsedTime();
           // Reiniciar timer de UI
           startUITimer();
+          // Verificar si el podómetro sigue activo, si no, reiniciarlo
+          if (!subscriptionRef.current) {
+            startPedometer();
+          }
+          // Asegurar que la tarea en background esté registrada
+          setupBackgroundFetch();
         }
       } else if (nextAppState.match(/inactive|background/)) {
         // App va al fondo
