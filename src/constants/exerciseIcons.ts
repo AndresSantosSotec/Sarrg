@@ -16,6 +16,7 @@ export const exerciseIconMap: Record<string, { icon: string; color: string }> = 
   'Remo': { icon: 'rowing', color: '#0284c7' },
   'Elíptica': { icon: 'fitness-center', color: '#2563eb' },
   'Senderismo': { icon: 'terrain', color: '#4ade80' },
+  'Trail Running': { icon: 'terrain', color: '#0d9488' },
   'Escalada': { icon: 'terrain', color: '#22c55e' },
   'Boxeo': { icon: 'sports-mma', color: '#dc2626' },
   'Artes Marciales': { icon: 'sports-kabaddi', color: '#7c3aed' },
