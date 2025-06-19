@@ -434,7 +434,7 @@ export default function RegisterActivityScreen() {
           {/* 3. Contador de pasos */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <MaterialCommunityIcons name="footprint-outline" size={20} color="#3b82f6" />
+              <MaterialCommunityIcons name="shoe-print" size={20} color="#3b82f6" />
               <Text style={styles.cardTitle}>Contador de pasos</Text>
             </View>
             <PedometerComponent

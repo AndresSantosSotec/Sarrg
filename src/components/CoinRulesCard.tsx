@@ -38,7 +38,7 @@ export default function CoinRulesCard() {
             color={COLORS.success}
             style={dashStyles.ruleIcon}
           />
-          <Text style={[dashStyles.rowLabel, { flex: 1, color: COLORS.text }]}>
+          <Text style={[dashStyles.rowLabel, { flex: 1, color: COLORS.primary }]}>
             {rule.text}
           </Text>
         </View>
