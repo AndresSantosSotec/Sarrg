@@ -8,7 +8,7 @@ import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import * as FileSystem from 'expo-file-system';
-import { MaterialIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import api from '../services/api';
 import { AuthContext } from '../contexts/AuthContext';
 
@@ -62,9 +62,10 @@ export default function RegisterActivityScreen() {
     { label: 'Remo', value: 'Remo', icon: 'rowing', color: '#0284c7' },
     { label: 'Elíptica', value: 'Elíptica', icon: 'fitness-center', color: '#2563eb' },
     { label: 'Senderismo', value: 'Senderismo', icon: 'terrain', color: '#4ade80' },
+    { label: 'Trail Running', value: 'Trail Running', icon: 'terrain', color: '#0d9488' },
     { label: 'Escalada', value: 'Escalada', icon: 'terrain', color: '#22c55e' },
     { label: 'Boxeo', value: 'Boxeo', icon: 'sports-mma', color: '#dc2626' },
-    { label: 'Artes Marciales', value: 'Artes Marciales', icon: 'sports-karate', color: '#7c3aed' },
+    { label: 'Artes Marciales', value: 'Artes Marciales', icon: 'sports-kabaddi', color: '#7c3aed' },
     { label: 'Tai Chi', value: 'Tai Chi', icon: 'self-improvement', color: '#4ade80' },
     { label: 'Estiramiento', value: 'Estiramiento', icon: 'accessibility-new', color: '#a3e635' },
     { label: 'CrossFit', value: 'CrossFit', icon: 'fitness-center', color: '#f97316' },
@@ -79,11 +80,11 @@ export default function RegisterActivityScreen() {
     { label: 'Esquí', value: 'Esquí', icon: 'downhill-skiing', color: '#0284c7' },
     { label: 'Snowboard', value: 'Snowboard', icon: 'snowboarding', color: '#0ea5e9' },
     { label: 'Surf', value: 'Surf', icon: 'surfing', color: '#3b82f6' },
-    { label: 'Patinaje', value: 'Patinaje', icon: 'roller-skate', color: '#f472b6' },
+    { label: 'Patinaje', value: 'Patinaje', icon: 'roller-skating', color: '#f472b6' },
     { label: 'Equitación', value: 'Equitación', icon: 'emoji-nature', color: '#4ade80' },
     { label: 'Canotaje', value: 'Canotaje', icon: 'kayaking', color: '#06b6d4' },
     { label: 'Kayak', value: 'Kayak', icon: 'kayaking', color: '#0ea5e9' },
-    { label: 'Patinaje en línea', value: 'Patinaje en línea', icon: 'roller-skate', color: '#f43f5e' },
+    { label: 'Patinaje en línea', value: 'Patinaje en línea', icon: 'roller-skating', color: '#f43f5e' },
     { label: 'Parkour', value: 'Parkour', icon: 'directions-run', color: '#f59e0b' },
     { label: 'Entrenamiento en Circuito', value: 'Entrenamiento en Circuito', icon: 'fitness-center', color: '#6366f1' },
   ];
@@ -381,6 +382,7 @@ export default function RegisterActivityScreen() {
               </TouchableOpacity>
             </View>
 
+
             {/* Notas */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Notas adicionales</Text>
@@ -420,11 +422,11 @@ export default function RegisterActivityScreen() {
             )}
           </View>
 
-          {/* 3. Podómetro */}
+          {/* 3. Contador de pasos */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <MaterialIcons name="directions-walk" size={20} color="#3b82f6" />
-              <Text style={styles.cardTitle}>Podómetro</Text>
+              <MaterialCommunityIcons name="footprint-outline" size={20} color="#3b82f6" />
+              <Text style={styles.cardTitle}>Contador de pasos</Text>
             </View>
             <PedometerComponent
               steps={steps}
