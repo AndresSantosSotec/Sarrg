@@ -8,7 +8,7 @@ import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import * as FileSystem from 'expo-file-system';
-import { MaterialIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import api from '../services/api';
 import { AuthContext } from '../contexts/AuthContext';
 
@@ -26,6 +26,8 @@ export default function RegisterActivityScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [notes, setNotes] = useState('');
   const [steps, setSteps] = useState(0);
+  const [surfaceType, setSurfaceType] = useState('');
+  const [difficultyLevel, setDifficultyLevel] = useState('');
 
   const { collaborator } = useContext(AuthContext);
   const getStepGoal = (level: string) => {
@@ -62,6 +64,7 @@ export default function RegisterActivityScreen() {
     { label: 'Remo', value: 'Remo', icon: 'rowing', color: '#0284c7' },
     { label: 'Elíptica', value: 'Elíptica', icon: 'fitness-center', color: '#2563eb' },
     { label: 'Senderismo', value: 'Senderismo', icon: 'terrain', color: '#4ade80' },
+    { label: 'Trail Running', value: 'Trail Running', icon: 'terrain', color: '#0d9488' },
     { label: 'Escalada', value: 'Escalada', icon: 'terrain', color: '#22c55e' },
     { label: 'Boxeo', value: 'Boxeo', icon: 'sports-mma', color: '#dc2626' },
     { label: 'Artes Marciales', value: 'Artes Marciales', icon: 'sports-karate', color: '#7c3aed' },
@@ -235,6 +238,10 @@ export default function RegisterActivityScreen() {
       form.append('calories', calories);
       form.append('notes', notes);
       form.append('steps', steps.toString());
+      if (exerciseType === 'Trail Running') {
+        form.append('surface_type', surfaceType);
+        form.append('difficulty_level', difficultyLevel);
+      }
 
       if (deviceLocation) {
         const [lat, lng] = deviceLocation.split(',').map(s => s.trim());
@@ -281,6 +288,8 @@ export default function RegisterActivityScreen() {
     setDeviceLocation(null);
     setNotes('');
     setSteps(0);
+    setSurfaceType('');
+    setDifficultyLevel('');
   };
 
   const getExerciseIcon = (type: string) => {
@@ -381,6 +390,29 @@ export default function RegisterActivityScreen() {
               </TouchableOpacity>
             </View>
 
+            {exerciseType === 'Trail Running' && (
+              <>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Tipo de superficie</Text>
+                  <TextInput
+                    value={surfaceType}
+                    onChangeText={setSurfaceType}
+                    placeholder="Tierra, arena, etc."
+                    style={styles.textInput}
+                  />
+                </View>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Nivel de dificultad</Text>
+                  <TextInput
+                    value={difficultyLevel}
+                    onChangeText={setDifficultyLevel}
+                    placeholder="Fácil, moderado, difícil..."
+                    style={styles.textInput}
+                  />
+                </View>
+              </>
+            )}
+
             {/* Notas */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Notas adicionales</Text>
@@ -420,11 +452,11 @@ export default function RegisterActivityScreen() {
             )}
           </View>
 
-          {/* 3. Podómetro */}
+          {/* 3. Contador de pasos */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <MaterialIcons name="directions-walk" size={20} color="#3b82f6" />
-              <Text style={styles.cardTitle}>Podómetro</Text>
+              <MaterialCommunityIcons name="footprint-outline" size={20} color="#3b82f6" />
+              <Text style={styles.cardTitle}>Contador de pasos</Text>
             </View>
             <PedometerComponent
               steps={steps}

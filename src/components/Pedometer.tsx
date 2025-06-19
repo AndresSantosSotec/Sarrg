@@ -464,16 +464,16 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         const available = await Pedometer.isAvailableAsync();
         setPedometerAvailable(available);
         if (!available) {
-          Alert.alert('Error', 'El podómetro no está disponible en este dispositivo');
+          Alert.alert('Error', 'El contador de pasos no está disponible en este dispositivo');
           return;
         }
       } catch (error) {
         console.log('Error comprobando disponibilidad del podómetro:', error);
-        Alert.alert('Error', 'No se pudo verificar el podómetro');
+        Alert.alert('Error', 'No se pudo verificar el contador de pasos');
         return;
       }
     } else if (!pedometerAvailable) {
-      Alert.alert('Error', 'El podómetro no está disponible en este dispositivo');
+      Alert.alert('Error', 'El contador de pasos no está disponible en este dispositivo');
       return;
     }
 
@@ -481,7 +481,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     if (permissionGranted === false) {
       Alert.alert(
         'Permiso denegado',
-        'Activa Movimiento y Actividad en Configuración para usar el podómetro.'
+        'Activa Movimiento y Actividad en Configuración para usar el contador de pasos.'
       );
       return;
     }
@@ -516,11 +516,11 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         console.log('Pedometer started successfully');
       } catch (error) {
         console.log('Error iniciando podómetro:', error);
-        Alert.alert('Error', 'No se pudo iniciar el podómetro');
+        Alert.alert('Error', 'No se pudo iniciar el contador de pasos');
       }
     } catch (error) {
       console.log('Error starting pedometer:', error);
-      Alert.alert('Error', 'No se pudo iniciar el podómetro');
+      Alert.alert('Error', 'No se pudo iniciar el contador de pasos');
     }
   };
 
@@ -574,7 +574,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
       console.log('Pedometer session started at:', new Date(now).toLocaleTimeString());
     } catch (error) {
       console.log('Error starting pedometer session:', error);
-      Alert.alert('Error', 'No se pudo iniciar el podómetro');
+      Alert.alert('Error', 'No se pudo iniciar el contador de pasos');
       setIsActive(false);
     }
   };
@@ -733,7 +733,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
   if (pedometerAvailable === null) {
     return (
       <View style={styles.container}>
-        <Text style={styles.loadingText}>Verificando podómetro...</Text>
+        <Text style={styles.loadingText}>Verificando contador de pasos...</Text>
       </View>
     );
   }
@@ -741,7 +741,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
   if (pedometerAvailable === false) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Podómetro no disponible en este dispositivo</Text>
+        <Text style={styles.errorText}>Contador de pasos no disponible en este dispositivo</Text>
       </View>
     );
   }
@@ -752,10 +752,10 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
       {permissionGranted === false && (
         <View style={styles.permissionWarning}>
           <Text style={styles.permissionText}>
-            ⚠️ Se necesitan permisos de actividad física para usar el podómetro.
+            ⚠️ Se necesitan permisos de actividad física para usar el contador de pasos.
           </Text>
           <Text style={styles.permissionSubtext}>
-            Presiona "Iniciar Podómetro" para otorgar permisos.
+            Presiona "Iniciar Contador de pasos" para otorgar permisos.
           </Text>
         </View>
       )}
@@ -764,7 +764,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
       <View style={styles.statusContainer}>
         <View style={[styles.statusIndicator, { backgroundColor: isActive ? '#22c55e' : '#ef4444' }]} />
         <Text style={styles.statusText}>
-          {isActive ? 'Podómetro Activo' : 'Podómetro Detenido'}
+          {isActive ? 'Contador de pasos Activo' : 'Contador de pasos Detenido'}
         </Text>
       </View>
 
@@ -862,12 +862,12 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
               onPress={handleStart}
             >
               <Text style={styles.buttonText}>
-                {permissionGranted === false ? 'Dar Permisos e Iniciar' : 'Iniciar Podómetro'}
+                {permissionGranted === false ? 'Dar Permisos e Iniciar' : 'Iniciar Contador de pasos'}
               </Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={[styles.button, styles.stopBtn]} onPress={handleStop}>
-              <Text style={styles.buttonText}>Detener Podómetro</Text>
+              <Text style={styles.buttonText}>Detener Contador</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -894,7 +894,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
             • Habilita "Background App Refresh" en Configuración
           </Text>
           <Text style={styles.instructionsText}>
-            • El podómetro seguirá contando incluso con la pantalla apagada
+            • El contador de pasos seguirá contando incluso con la pantalla apagada
           </Text>
         </View>
       )}
