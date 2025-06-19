@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Image,
 } from 'react-native';
 import { AuthContext } from '../contexts/AuthContext';
 
@@ -96,11 +97,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1e3a8a',
     padding: 20,
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
   },
   logoContainer: {
     alignItems: 'center',
-    marginTop: 40,
+    marginTop: 200,
+    marginBottom: 50,
   },
   title: {
     fontSize: 36,
@@ -153,5 +155,10 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
     fontSize: 12,
     marginBottom: 8,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 20,
   },
 });

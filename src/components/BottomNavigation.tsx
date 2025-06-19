@@ -8,24 +8,31 @@ export default function BottomNavigation({ state, navigation }: BottomTabBarProp
   const { bottom } = useSafeAreaInsets();
 
   // Filtrar solo las rutas que queremos mostrar (sin Profile)
-  const allowedRoutes = ['Dashboard', 'RegisterActivity', 'ActivityHistory', 'Logout'];
+  const allowedRoutes = ['Dashboard', 'RegisterActivity', 'ReferenceActivity','ActivityHistory', 'Logout'];
   const filteredRoutes = state.routes.filter(route => allowedRoutes.includes(route.name));
 
   return (
     <View style={[styles.navbar, { paddingBottom: bottom, height: 64 + bottom }]}>
-      {filteredRoutes.map((route) => {
-        const isActive = state.index === state.routes.indexOf(route);
+      {filteredRoutes.map((route, index) => {
+        const isActive = route.key === state.routes[state.index].key;
 
         /* Ícono y texto según la ruta */
         type TabInfo = { icon: any; label: any; iconType: 'fontawesome' | 'fontawesome5' };
-        const { icon, label, iconType }: TabInfo =
-          route.name === 'Dashboard'
-            ? { icon: 'home', label: 'Inicio', iconType: 'fontawesome' }
-            : route.name === 'RegisterActivity'
-            ? { icon: 'running', label: 'Actividad', iconType: 'fontawesome5' }
-            : route.name === 'ActivityHistory'
-            ? { icon: 'history', label: 'Historial', iconType: 'fontawesome' }
-            : { icon: 'sign-out', label: 'Salir', iconType: 'fontawesome' };
+        
+        const tabInfoMap: Record<string, TabInfo> = {
+          Dashboard: { icon: 'home', label: 'Inicio', iconType: 'fontawesome' },
+          RegisterActivity: { icon: 'running', label: 'Actividad', iconType: 'fontawesome5' },
+          ActivityHistory: { icon: 'history', label: 'Historial', iconType: 'fontawesome' },
+          ReferenceActivity: { icon: 'info-circle', label: 'Referencias', iconType: 'fontawesome5' },
+          Logout: { icon: 'sign-out', label: 'Salir', iconType: 'fontawesome' },
+        };
+
+        const { icon, label, iconType }: TabInfo = tabInfoMap[route.name] || {
+          icon: 'question-circle',
+          label: 'Desconocido',
+          iconType: 'fontawesome',
+        };
+
 
         return (
           <TouchableOpacity

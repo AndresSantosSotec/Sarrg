@@ -10,12 +10,14 @@ import StoreScreen from '../screens/StoreScreen';
 import LogoutScreen from '../screens/LogoutScreen';
 
 import BottomNavigation from '../components/BottomNavigation';
+import ReferenceActivityScreen from 'screens/ReferenceActivityScreen';
 
 export type TabsParamList = {
   Dashboard: undefined;
   Profile: undefined;
   RegisterActivity: undefined;
   ActivityHistory: undefined;
+  ReferenceActivity: undefined;
   Wallet: undefined;
   Store: undefined;
   Logout: undefined;
@@ -34,6 +36,7 @@ export default function MainTabs() {
       <Tab.Screen name="Profile" component={ProfileScreen} />
       <Tab.Screen name="RegisterActivity" component={RegisterActivityScreen} />
       <Tab.Screen name="ActivityHistory" component={ActivityHistoryScreen} />
+      <Tab.Screen name="ReferenceActivity" component={ReferenceActivityScreen} />
       <Tab.Screen name="Wallet" component={WalletScreen} />
       <Tab.Screen name="Store" component={StoreScreen} />
       <Tab.Screen name="Logout" component={LogoutScreen} />
