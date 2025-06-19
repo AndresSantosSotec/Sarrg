@@ -38,6 +38,7 @@ interface PedometerProps {
 const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeUpdate, dailyGoal }) => {
   const [pedometerAvailable, setPedometerAvailable] = useState<boolean | null>(null);
   const [isActive, setIsActive] = useState(false);
+  const isActiveRef = useRef(isActive);
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
   const [goal, setGoal] = useState(10000);
   const [strideLength] = useState(0.70);
@@ -63,6 +64,9 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
   const lastStepsRef = useRef(0);
   const sessionStartSteps = useRef(0);
   const uiTimerRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    isActiveRef.current = isActive;
+  }, [isActive]);
   // Storage keys
   const STORAGE_KEYS = {
     SESSION_START_TIME: 'pedometer_session_start_time',
@@ -137,7 +141,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
 
   // Calcular tiempo transcurrido basado en timestamps reales
   const calculateElapsedTime = () => {
-    if (!realStartTimeRef.current || !isActive) return 0;
+    if (!realStartTimeRef.current || !isActiveRef.current) return 0;
 
     const now = Date.now();
     const rawElapsed = Math.floor((now - realStartTimeRef.current) / 1000);
@@ -161,7 +165,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     }
 
     uiTimerRef.current = setInterval(() => {
-      if (isActive && realStartTimeRef.current) {
+      if (isActiveRef.current && realStartTimeRef.current) {
         calculateElapsedTime();
       }
     }, 1000);
@@ -390,7 +394,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         // App vuelve al primer plano
         console.log('App returned to foreground');
 
-        if (isActive && realStartTimeRef.current) {
+        if (isActiveRef.current && realStartTimeRef.current) {
           // Recalcular tiempo transcurrido
           calculateElapsedTime();
           // Reiniciar timer de UI
@@ -400,7 +404,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
         // App va al fondo
         console.log('App going to background');
 
-        if (isActive) {
+        if (isActiveRef.current) {
           // Solo detener el timer de UI, NO el tracking de tiempo
           stopUITimer();
           // Guardar estado actual
@@ -551,6 +555,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
       setElapsedTime(0);
       setTotalSessionTime(0);
       setIsActive(true);
+      isActiveRef.current = true;
 
       // 4) Iniciar el temporizador de pantalla YA
       startUITimer();
@@ -584,6 +589,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
 
     // 3) Marca inactivo y limpia timestamps
     setIsActive(false);
+    isActiveRef.current = false;
     realStartTimeRef.current = null;
     setSessionStartTime(null);
 
@@ -644,11 +650,13 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
               // Inicializar tiempo desde 0 y empezar timer
               setElapsedTime(0);
               setTotalSessionTime(0);
+              isActiveRef.current = true;
               startUITimer();
             } else {
               // Si no estaba activo, limpiar timestamps
               realStartTimeRef.current = null;
               setSessionStartTime(null);
+              isActiveRef.current = false;
             }
           }
         }
@@ -672,7 +680,7 @@ const PedometerComponent: React.FC<PedometerProps> = ({ steps, setSteps, onTimeU
     // Limpiar todo el storage
     await AsyncStorage.multiRemove(Object.values(STORAGE_KEYS));
 
-    if (isActive) {
+    if (isActiveRef.current) {
       setTimeout(async () => {
         const now = Date.now();
         realStartTimeRef.current = now;
