@@ -34,11 +34,11 @@ export const exerciseIconMap: Record<string, { icon: string; color: string }> = 
   'Esquí': { icon: 'downhill-skiing', color: '#0284c7' },
   'Snowboard': { icon: 'snowboarding', color: '#0ea5e9' },
   'Surf': { icon: 'surfing', color: '#3b82f6' },
-  'Patinaje': { icon: 'roller-skate', color: '#f472b6' },
+  'Patinaje': { icon: 'roller-skating', color: '#f472b6' },
   'Equitación': { icon: 'emoji-nature', color: '#4ade80' },
   'Canotaje': { icon: 'kayaking', color: '#06b6d4' },
   'Kayak': { icon: 'kayaking', color: '#0ea5e9' },
-  'Patinaje en línea': { icon: 'roller-skate', color: '#f43f5e' },
+  'Patinaje en línea': { icon: 'roller-skating', color: '#f43f5e' },
   'Parkour': { icon: 'directions-run', color: '#f59e0b' },
   'Entrenamiento en Circuito': { icon: 'fitness-center', color: '#6366f1' },
 };

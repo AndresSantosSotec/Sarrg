@@ -67,7 +67,7 @@ export default function RegisterActivityScreen() {
     { label: 'Trail Running', value: 'Trail Running', icon: 'terrain', color: '#0d9488' },
     { label: 'Escalada', value: 'Escalada', icon: 'terrain', color: '#22c55e' },
     { label: 'Boxeo', value: 'Boxeo', icon: 'sports-mma', color: '#dc2626' },
-    { label: 'Artes Marciales', value: 'Artes Marciales', icon: 'sports-karate', color: '#7c3aed' },
+    { label: 'Artes Marciales', value: 'Artes Marciales', icon: 'sports-kabaddi', color: '#7c3aed' },
     { label: 'Tai Chi', value: 'Tai Chi', icon: 'self-improvement', color: '#4ade80' },
     { label: 'Estiramiento', value: 'Estiramiento', icon: 'accessibility-new', color: '#a3e635' },
     { label: 'CrossFit', value: 'CrossFit', icon: 'fitness-center', color: '#f97316' },
@@ -82,11 +82,11 @@ export default function RegisterActivityScreen() {
     { label: 'Esquí', value: 'Esquí', icon: 'downhill-skiing', color: '#0284c7' },
     { label: 'Snowboard', value: 'Snowboard', icon: 'snowboarding', color: '#0ea5e9' },
     { label: 'Surf', value: 'Surf', icon: 'surfing', color: '#3b82f6' },
-    { label: 'Patinaje', value: 'Patinaje', icon: 'roller-skate', color: '#f472b6' },
+    { label: 'Patinaje', value: 'Patinaje', icon: 'roller-skating', color: '#f472b6' },
     { label: 'Equitación', value: 'Equitación', icon: 'emoji-nature', color: '#4ade80' },
     { label: 'Canotaje', value: 'Canotaje', icon: 'kayaking', color: '#06b6d4' },
     { label: 'Kayak', value: 'Kayak', icon: 'kayaking', color: '#0ea5e9' },
-    { label: 'Patinaje en línea', value: 'Patinaje en línea', icon: 'roller-skate', color: '#f43f5e' },
+    { label: 'Patinaje en línea', value: 'Patinaje en línea', icon: 'roller-skating', color: '#f43f5e' },
     { label: 'Parkour', value: 'Parkour', icon: 'directions-run', color: '#f59e0b' },
     { label: 'Entrenamiento en Circuito', value: 'Entrenamiento en Circuito', icon: 'fitness-center', color: '#6366f1' },
   ];
@@ -390,28 +390,7 @@ export default function RegisterActivityScreen() {
               </TouchableOpacity>
             </View>
 
-            {exerciseType === 'Trail Running' && (
-              <>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Tipo de superficie</Text>
-                  <TextInput
-                    value={surfaceType}
-                    onChangeText={setSurfaceType}
-                    placeholder="Tierra, arena, etc."
-                    style={styles.textInput}
-                  />
-                </View>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Nivel de dificultad</Text>
-                  <TextInput
-                    value={difficultyLevel}
-                    onChangeText={setDifficultyLevel}
-                    placeholder="Fácil, moderado, difícil..."
-                    style={styles.textInput}
-                  />
-                </View>
-              </>
-            )}
+
 
             {/* Notas */}
             <View style={styles.inputGroup}>
