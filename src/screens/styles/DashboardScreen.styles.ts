@@ -242,15 +242,16 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   coinContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 14,
-    minWidth: 70,
+    minWidth: 100,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
+    gap: 8,
   },
   coinIconWrapper: {
     width: 28,
@@ -259,7 +260,9 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 215, 0, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 4,
+  },
+  coinTextWrapper: {
+    alignItems: 'center',
   },
   coinValue: {
     fontSize: 16,

@@ -202,9 +202,13 @@ const uploadPhoto = async () => {
               style={styles.coinContainer}
               activeOpacity={0.7}
             >
-              <FontAwesome5 name="coins" size={12} color={COLORS.gold} />
-              <Text style={styles.coinValue}>{collaborator.coin_fits}</Text>
-              <Text style={styles.coinLabel}>CF</Text>
+              <View style={styles.coinIconWrapper}>
+                <FontAwesome5 name="coins" size={12} color={COLORS.gold} />
+              </View>
+              <View style={styles.coinTextWrapper}>
+                <Text style={styles.coinValue}>{collaborator.coin_fits}</Text>
+                <Text style={styles.coinLabel}>CF</Text>
+              </View>
             </TouchableOpacity>
 
             {/* Notificaciones */}
