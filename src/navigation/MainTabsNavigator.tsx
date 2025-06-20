@@ -7,6 +7,8 @@ import RegisterActivityScreen from '../screens/RegisterActivityScreen';
 import ActivityHistoryScreen from '../screens/ActivityHistoryScreen';
 import WalletScreen from '../screens/WalletScreen';
 import StoreScreen from '../screens/StoreScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import GeneralInfoScreen from '../screens/GeneralInfoScreen';
 import LogoutScreen from '../screens/LogoutScreen';
 
 import BottomNavigation from '../components/BottomNavigation';
@@ -20,6 +22,8 @@ export type TabsParamList = {
   ReferenceActivity: undefined;
   Wallet: undefined;
   Store: undefined;
+  Notifications: undefined;
+  GeneralInfo: undefined;
   Logout: undefined;
 };
 
@@ -27,7 +31,7 @@ const Tab = createBottomTabNavigator<TabsParamList>();
 
 export default function MainTabs() {
   return (
-    <Tab.Navigator
+  <Tab.Navigator
       screenOptions={{ headerShown: false }}
       tabBar={(props) => <BottomNavigation {...props} />}
     >
@@ -39,6 +43,8 @@ export default function MainTabs() {
       <Tab.Screen name="ReferenceActivity" component={ReferenceActivityScreen} />
       <Tab.Screen name="Wallet" component={WalletScreen} />
       <Tab.Screen name="Store" component={StoreScreen} />
+      <Tab.Screen name="Notifications" component={NotificationsScreen} />
+      <Tab.Screen name="GeneralInfo" component={GeneralInfoScreen} />
       <Tab.Screen name="Logout" component={LogoutScreen} />
     </Tab.Navigator>
   );

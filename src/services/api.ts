@@ -71,4 +71,14 @@ export async function fetchUserActivities<T>(page = 1): Promise<ActivityPage<T>>
   }
 }
 
+export async function fetchNotifications<T>(): Promise<T[]> {
+  const { data } = await api.get('/app/notifications')
+  return Array.isArray(data) ? data : data.data ?? []
+}
+
+export async function fetchGeneralInfo<T>(): Promise<T[]> {
+  const { data } = await api.get('/app/general-info')
+  return Array.isArray(data) ? data : data.data ?? []
+}
+
 export default api
