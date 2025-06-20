@@ -71,4 +71,32 @@ export async function fetchUserActivities<T>(page = 1): Promise<ActivityPage<T>>
   }
 }
 
+export interface NotificationItem {
+  id: number
+  title: string
+  body: string
+  created_at: string
+  read_at?: string | null
+}
+
+export async function fetchNotifications(): Promise<NotificationItem[]> {
+  const { data } = await api.get('/app/notifications')
+  return data.data ?? data
+}
+
+export async function markNotificationAsRead(id: number): Promise<void> {
+  await api.post(`/app/notifications/${id}/read`)
+}
+
+export interface GeneralInfoItem {
+  id: number
+  title: string
+  content: string
+}
+
+export async function fetchGeneralInfo(): Promise<GeneralInfoItem[]> {
+  const { data } = await api.get('/app/general-info')
+  return data.data ?? data
+}
+
 export default api
