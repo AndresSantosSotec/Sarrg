@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+
 import {
   View,
   Text,
@@ -18,10 +19,13 @@ import {
 } from '../services/api';
 import { COLORS } from './styles/DashboardScreen.styles';
 
+
 export default function NotificationsScreen() {
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
+
   const navigation = useNavigation();
+
 
   useEffect(() => {
     const load = async () => {
@@ -40,13 +44,16 @@ export default function NotificationsScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
+
         <ActivityIndicator size="large" color={COLORS.primary} />
+
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
+
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -102,6 +109,7 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
+
   container: { flex: 1, backgroundColor: COLORS.lightGray },
   header: {
     backgroundColor: COLORS.primary,
