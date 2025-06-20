@@ -250,6 +250,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 14,
+
     minWidth: 80,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
