@@ -17,6 +17,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../contexts/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/AppNavigator';
 import { styles } from './styles/DashboardScreen.styles';
 import BmiScale from '../components/BmiScale';
 import CoinRulesCard from '../components/CoinRulesCard';
@@ -64,6 +67,7 @@ const getIMCStatus = (imc: number) => {
 export default function DashboardScreen() {
   const { collaborator, refreshData, loading, updatePhoto, changePassword } = useContext(AuthContext);
   const { bottom } = useSafeAreaInsets();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   // Estado para la foto
   const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
@@ -191,7 +195,7 @@ const uploadPhoto = async () => {
             <Text style={styles.brandSubtext}>Sistema de Bienestar</Text>
           </View>
 
-          {/* Contenedor para CoinFits y Reload */}
+          {/* Contenedor para CoinFits y acciones */}
           <View style={styles.rightSection}>
             {/* Sección CoinFits */}
             <TouchableOpacity
@@ -201,6 +205,24 @@ const uploadPhoto = async () => {
               <FontAwesome5 name="coins" size={12} color={COLORS.gold} />
               <Text style={styles.coinValue}>{collaborator.coin_fits}</Text>
               <Text style={styles.coinLabel}>CF</Text>
+            </TouchableOpacity>
+
+            {/* Notificaciones */}
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => navigation.navigate('Notifications')}
+              activeOpacity={0.7}
+            >
+              <FontAwesome5 name="bell" size={14} color={COLORS.white} />
+            </TouchableOpacity>
+
+            {/* Información general */}
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => navigation.navigate('GeneralInfo')}
+              activeOpacity={0.7}
+            >
+              <FontAwesome5 name="lightbulb" size={14} color={COLORS.white} />
             </TouchableOpacity>
 
             {/* Sección Reload */}

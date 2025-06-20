@@ -71,4 +71,27 @@ export async function fetchUserActivities<T>(page = 1): Promise<ActivityPage<T>>
   }
 }
 
+export interface NotificationItem {
+  id: number
+  title: string
+  body: string
+  created_at: string
+}
+
+export async function fetchNotifications(): Promise<NotificationItem[]> {
+  const { data } = await api.get('/app/notifications')
+  return data.data ?? data
+}
+
+export interface GeneralInfoItem {
+  id: number
+  title: string
+  content: string
+}
+
+export async function fetchGeneralInfo(): Promise<GeneralInfoItem[]> {
+  const { data } = await api.get('/app/general-info')
+  return data.data ?? data
+}
+
 export default api
