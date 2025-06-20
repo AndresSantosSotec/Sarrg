@@ -76,12 +76,21 @@ export interface NotificationItem {
   title: string
   body: string
   created_at: string
+
+  read_at?: string | null
+
 }
 
 export async function fetchNotifications(): Promise<NotificationItem[]> {
   const { data } = await api.get('/app/notifications')
   return data.data ?? data
 }
+
+
+export async function markNotificationAsRead(id: number): Promise<void> {
+  await api.post(`/app/notifications/${id}/read`)
+}
+
 
 export interface GeneralInfoItem {
   id: number
