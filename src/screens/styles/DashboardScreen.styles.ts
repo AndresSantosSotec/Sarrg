@@ -59,6 +59,8 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 20,
+    flexWrap: 'wrap',
+    rowGap: 12,
   },
   rightSection: {
     flexDirection: 'row',
@@ -248,7 +250,8 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 14,
-    minWidth: 100,
+
+    minWidth: 80,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
     gap: 8,
