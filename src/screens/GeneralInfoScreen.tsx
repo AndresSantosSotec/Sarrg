@@ -6,9 +6,12 @@ import {
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
-  Alert,
   Platform,
+  Modal,
+  Image,
+  ScrollView,
 } from 'react-native';
+import { Video } from 'expo-av';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { fetchGeneralInfo, GeneralInfoItem } from '../services/api';
@@ -17,6 +20,7 @@ import { COLORS } from './styles/DashboardScreen.styles';
 export default function GeneralInfoScreen() {
   const [items, setItems] = useState<GeneralInfoItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<GeneralInfoItem | null>(null);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -60,7 +64,7 @@ export default function GeneralInfoScreen() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.item}
-            onPress={() => Alert.alert(item.title, item.content)}
+            onPress={() => setSelectedItem(item)}
             activeOpacity={0.8}
           >
             <View style={styles.iconWrapper}>
@@ -68,11 +72,47 @@ export default function GeneralInfoScreen() {
             </View>
             <View style={styles.itemContent}>
               <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.body}>{item.content}</Text>
+              <Text style={styles.body} numberOfLines={2}>{item.content}</Text>
             </View>
           </TouchableOpacity>
         )}
       />
+      {selectedItem && (
+        <Modal
+          visible
+          animationType="slide"
+          transparent
+          onRequestClose={() => setSelectedItem(null)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{selectedItem.title}</Text>
+                <TouchableOpacity onPress={() => setSelectedItem(null)}>
+                  <FontAwesome5 name="times" size={20} color={COLORS.darkGray} />
+                </TouchableOpacity>
+              </View>
+              <ScrollView style={styles.modalScroll}>
+                {selectedItem.image_url && (
+                  <Image
+                    source={{ uri: selectedItem.image_url }}
+                    style={styles.modalImage}
+                  />
+                )}
+                {selectedItem.video_url && (
+                  <Video
+                    source={{ uri: selectedItem.video_url }}
+                    style={styles.modalVideo}
+                    useNativeControls
+                    resizeMode="contain"
+                  />
+                )}
+                <Text style={styles.modalBody}>{selectedItem.content}</Text>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -132,4 +172,38 @@ const styles = StyleSheet.create({
   itemContent: { flex: 1 },
   title: { fontSize: 15, fontWeight: '700', color: COLORS.darkGray },
   body: { fontSize: 13, color: COLORS.darkGray, marginTop: 4 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    maxHeight: '90%',
+    width: '100%',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.darkGray,
+    flex: 1,
+    marginRight: 12,
+  },
+  modalScroll: { padding: 20 },
+  modalImage: { width: '100%', height: 200, borderRadius: 12, marginBottom: 16, resizeMode: 'cover' },
+  modalVideo: { width: '100%', height: 200, borderRadius: 12, marginBottom: 16 },
+  modalBody: { fontSize: 15, color: COLORS.darkGray, marginBottom: 20 },
 });
