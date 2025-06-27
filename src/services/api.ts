@@ -96,10 +96,14 @@ export interface GeneralInfoItem {
   id: number
   title: string
   content: string
+  image_url?: string | null
+  video_url?: string | null
 }
 
 export async function fetchGeneralInfo(): Promise<GeneralInfoItem[]> {
-  const { data } = await api.get('/app/general-info')
+  // Endpoint definido en las rutas de AppMobile
+  // Route::get('info', [GeneralInfoController::class, 'index']);
+  const { data } = await api.get('/app/info')
   return data.data ?? data
 }
 
