@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   fetchNotifications,
   NotificationItem,
@@ -26,6 +27,7 @@ export default function NotificationsScreen() {
   const [loading, setLoading] = useState(true);
 
   const navigation = useNavigation();
+  const { top } = useSafeAreaInsets();
 
 
   useEffect(() => {
@@ -55,7 +57,7 @@ export default function NotificationsScreen() {
   return (
     <View style={styles.container}>
 
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: top }] }>
         <TouchableOpacity
           style={styles.backButton}
           onPress={navigation.goBack}

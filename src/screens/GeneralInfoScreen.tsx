@@ -14,6 +14,7 @@ import {
 import { Video, ResizeMode } from 'expo-av';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchGeneralInfo, GeneralInfoItem } from '../services/api';
 import { COLORS } from './styles/DashboardScreen.styles';
 
@@ -22,6 +23,7 @@ export default function GeneralInfoScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<GeneralInfoItem | null>(null);
   const navigation = useNavigation();
+  const { top } = useSafeAreaInsets();
 
   useEffect(() => {
     const load = async () => {
@@ -47,7 +49,7 @@ export default function GeneralInfoScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: top }] }>
         <TouchableOpacity
           style={styles.backButton}
           onPress={navigation.goBack}

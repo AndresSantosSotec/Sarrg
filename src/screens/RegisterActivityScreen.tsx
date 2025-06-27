@@ -14,6 +14,7 @@ import { AuthContext } from '../contexts/AuthContext';
 
 import PedometerComponent from '../components/Pedometer';
 import { styles } from './styles/RegisterActivityScreen.styles';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function RegisterActivityScreen() {
   const [exerciseType, setExerciseType] = useState('Caminata');
@@ -28,6 +29,8 @@ export default function RegisterActivityScreen() {
   const [steps, setSteps] = useState(0);
   const [surfaceType, setSurfaceType] = useState('');
   const [difficultyLevel, setDifficultyLevel] = useState('');
+
+  const { top } = useSafeAreaInsets();
 
   const { collaborator } = useContext(AuthContext);
   const getStepGoal = (level: string) => {
@@ -317,7 +320,7 @@ export default function RegisterActivityScreen() {
         style={{ flex: 1 }}
       >
         {/* Header mejorado */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: top }] }>
           <View style={styles.headerContent}>
             <MaterialIcons name="fitness-center" size={24} color="white" />
             <Text style={styles.headerTitle}>Registrar Actividad</Text>

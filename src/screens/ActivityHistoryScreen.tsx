@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
 } from 'react-native'
 import { useIsFocused } from '@react-navigation/native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialIcons } from '@expo/vector-icons'
 import { fetchUserActivities } from '../services/api'
 import { exerciseIconMap } from '../constants/exerciseIcons'
@@ -40,6 +41,7 @@ export default function ActivityHistoryScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const isFocused = useIsFocused()
+  const { top } = useSafeAreaInsets()
 
   const loadActivities = useCallback(
     async (p: number, append = false) => {
@@ -150,7 +152,7 @@ export default function ActivityHistoryScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: top }] }>
         <View style={styles.headerContent}>
           <MaterialIcons name="history" size={24} color="white" />
           <Text style={styles.headerTitle}>Historial de Actividades</Text>
