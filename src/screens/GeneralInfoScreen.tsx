@@ -11,7 +11,7 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import { Video } from 'expo-av';
+import { Video, ResizeMode } from 'expo-av';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { fetchGeneralInfo, GeneralInfoItem } from '../services/api';
@@ -104,7 +104,7 @@ export default function GeneralInfoScreen() {
                     source={{ uri: selectedItem.video_url }}
                     style={styles.modalVideo}
                     useNativeControls
-                    resizeMode="contain"
+                    resizeMode={ResizeMode.CONTAIN}
                   />
                 )}
                 <Text style={styles.modalBody}>{selectedItem.content}</Text>
