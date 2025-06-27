@@ -11,7 +11,9 @@ import {
   Platform,
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+
+import { useNavigation, useIsFocused } from '@react-navigation/native';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   fetchNotifications,
@@ -29,8 +31,10 @@ export default function NotificationsScreen() {
   const navigation = useNavigation();
   const { top } = useSafeAreaInsets();
 
-
+  const isFocused = useIsFocused();
   useEffect(() => {
+    if (!isFocused) return;
+
     const load = async () => {
       try {
         const data = await fetchNotifications();
@@ -41,8 +45,10 @@ export default function NotificationsScreen() {
         setLoading(false);
       }
     };
+
+    setLoading(true);
     load();
-  }, []);
+  }, [isFocused]);
 
   if (loading) {
     return (

@@ -11,6 +11,8 @@ import {
   Dimensions,
   Alert,
   TextInput,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import { FontAwesome5, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -88,12 +90,29 @@ export default function DashboardScreen() {
   const isFocused = useIsFocused();
 
   useEffect(() => {
-    if (isFocused) {
-      fetchNotifications()
-        .then(n => setHasUnread(n.some(item => !item.read_at)))
-        .catch(err => console.error('Error fetching notifications', err));
+
+    const checkNotifications = async () => {
+      try {
+        const n = await fetchNotifications()
+        setHasUnread(n.some(item => !item.read_at))
+      } catch (err) {
+        console.error('Error fetching notifications', err)
+      }
     }
-  }, [isFocused]);
+
+    if (isFocused) {
+      checkNotifications()
+    }
+
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active') {
+        checkNotifications()
+      }
+    })
+
+    return () => sub.remove()
+  }, [isFocused])
+
 
   // Picker de galería
   const pickImage = async () => {

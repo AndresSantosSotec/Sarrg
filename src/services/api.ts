@@ -86,14 +86,21 @@ export async function fetchNotifications(): Promise<NotificationItem[]> {
   const { data } = await api.get('/app/notifications')
   const items = data.data ?? data
 
-  return items.map((n: any) => ({
-    id: n.id,
-    title: n.data?.title ?? '',
-    body: n.data?.body ?? '',
-    action: n.data?.action ?? '',
-    created_at: n.created_at,
-    read_at: n.read_at,
-  }))
+
+  return items.map((n: any) => {
+    const raw =
+      typeof n.data === 'string' ? JSON.parse(n.data) : n.data ?? {}
+
+    return {
+      id: n.id,
+      title: raw.title ?? '',
+      body: raw.body ?? '',
+      action: raw.action ?? '',
+      created_at: n.created_at,
+      read_at: n.read_at,
+    }
+  })
+
 }
 
 
