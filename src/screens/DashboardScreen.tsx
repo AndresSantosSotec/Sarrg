@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,10 +17,11 @@ import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../contexts/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { styles } from './styles/DashboardScreen.styles';
+import { fetchNotifications } from '../services/api';
 import BmiScale from '../components/BmiScale';
 import CoinRulesCard from '../components/CoinRulesCard';
 import TeamInfoModal from '../components/TeamInfoModal';
@@ -82,6 +83,17 @@ export default function DashboardScreen() {
 
   const [showTeamInfo, setShowTeamInfo] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState('');
+
+  const [hasUnread, setHasUnread] = useState(false);
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchNotifications()
+        .then(n => setHasUnread(n.some(item => !item.read_at)))
+        .catch(err => console.error('Error fetching notifications', err));
+    }
+  }, [isFocused]);
 
   // Picker de galería
   const pickImage = async () => {
@@ -213,11 +225,12 @@ const uploadPhoto = async () => {
 
             {/* Notificaciones */}
             <TouchableOpacity
-              style={styles.headerIconButton}
+              style={[styles.headerIconButton, { position: 'relative' }]}
               onPress={() => navigation.navigate('Notifications')}
               activeOpacity={0.7}
             >
               <FontAwesome5 name="bell" size={14} color={COLORS.white} />
+              {hasUnread && <View style={styles.notificationDot} />}
             </TouchableOpacity>
 
             {/* Información general */}
