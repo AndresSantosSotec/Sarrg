@@ -86,6 +86,7 @@ export async function fetchNotifications(): Promise<NotificationItem[]> {
   const { data } = await api.get('/app/notifications')
   const items = data.data ?? data
 
+
   return items.map((n: any) => {
     const raw =
       typeof n.data === 'string' ? JSON.parse(n.data) : n.data ?? {}
@@ -99,6 +100,7 @@ export async function fetchNotifications(): Promise<NotificationItem[]> {
       read_at: n.read_at,
     }
   })
+
 }
 
 

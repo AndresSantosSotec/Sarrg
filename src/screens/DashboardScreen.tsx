@@ -90,6 +90,7 @@ export default function DashboardScreen() {
   const isFocused = useIsFocused();
 
   useEffect(() => {
+
     const checkNotifications = async () => {
       try {
         const n = await fetchNotifications()
@@ -111,6 +112,7 @@ export default function DashboardScreen() {
 
     return () => sub.remove()
   }, [isFocused])
+
 
   // Picker de galería
   const pickImage = async () => {
