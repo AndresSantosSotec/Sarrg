@@ -78,17 +78,36 @@ export interface NotificationItem {
   created_at: string
 
   read_at?: string | null
+  action?: string
 
 }
 
 export async function fetchNotifications(): Promise<NotificationItem[]> {
   const { data } = await api.get('/app/notifications')
-  return data.data ?? data
+  const items = data.data ?? data
+
+  return items.map((n: any) => {
+    const raw =
+      typeof n.data === 'string' ? JSON.parse(n.data) : n.data ?? {}
+
+    return {
+      id: n.id,
+      title: raw.title ?? '',
+      body: raw.body ?? '',
+      action: raw.action ?? '',
+      created_at: n.created_at,
+      read_at: n.read_at,
+    }
+  })
 }
 
 
 export async function markNotificationAsRead(id: number): Promise<void> {
   await api.post(`/app/notifications/${id}/read`)
+}
+
+export async function deleteNotification(id: number): Promise<void> {
+  await api.delete(`/app/notifications/${id}`)
 }
 
 

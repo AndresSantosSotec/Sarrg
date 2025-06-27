@@ -189,6 +189,17 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
   },
+  notificationDot: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#dc2626',
+    borderWidth: 1,
+    borderColor: COLORS.white,
+  },
 
   // === PASSWORD FORM ===
   passwordForm: {

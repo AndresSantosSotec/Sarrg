@@ -11,11 +11,13 @@ import {
   Platform,
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   fetchNotifications,
   NotificationItem,
   markNotificationAsRead,
+  deleteNotification,
 } from '../services/api';
 import { COLORS } from './styles/DashboardScreen.styles';
 
@@ -25,9 +27,13 @@ export default function NotificationsScreen() {
   const [loading, setLoading] = useState(true);
 
   const navigation = useNavigation();
+  const { top } = useSafeAreaInsets();
+  const isFocused = useIsFocused();
 
 
   useEffect(() => {
+    if (!isFocused) return;
+
     const load = async () => {
       try {
         const data = await fetchNotifications();
@@ -38,8 +44,10 @@ export default function NotificationsScreen() {
         setLoading(false);
       }
     };
+
+    setLoading(true);
     load();
-  }, []);
+  }, [isFocused]);
 
   if (loading) {
     return (
@@ -54,7 +62,7 @@ export default function NotificationsScreen() {
   return (
     <View style={styles.container}>
 
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: top }] }>
         <TouchableOpacity
           style={styles.backButton}
           onPress={navigation.goBack}
@@ -63,6 +71,21 @@ export default function NotificationsScreen() {
           <FontAwesome5 name="arrow-left" size={16} color={COLORS.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notificaciones</Text>
+        <TouchableOpacity
+          style={styles.clearButton}
+          onPress={async () => {
+            const toRemove = items.filter(i => i.read_at)
+            try {
+              await Promise.all(toRemove.map(n => deleteNotification(n.id)))
+              setItems(prev => prev.filter(n => !n.read_at))
+            } catch (err) {
+              console.error('Error removing notifications', err)
+            }
+          }}
+          activeOpacity={0.7}
+        >
+          <FontAwesome5 name="trash" size={16} color={COLORS.white} />
+        </TouchableOpacity>
       </View>
       <FlatList
         data={items}
@@ -130,13 +153,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.15)',
   },
+  clearButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    marginLeft: 8,
+  },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
     color: COLORS.white,
     fontSize: 18,
     fontWeight: '700',
-    marginRight: 40,
+    marginRight: 0,
   },
   list: { padding: 16 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },

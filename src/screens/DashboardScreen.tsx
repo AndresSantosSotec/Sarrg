@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,16 +11,19 @@ import {
   Dimensions,
   Alert,
   TextInput,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import { FontAwesome5, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../contexts/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { styles } from './styles/DashboardScreen.styles';
+import { fetchNotifications } from '../services/api';
 import BmiScale from '../components/BmiScale';
 import CoinRulesCard from '../components/CoinRulesCard';
 import TeamInfoModal from '../components/TeamInfoModal';
@@ -82,6 +85,32 @@ export default function DashboardScreen() {
 
   const [showTeamInfo, setShowTeamInfo] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState('');
+
+  const [hasUnread, setHasUnread] = useState(false);
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    const checkNotifications = async () => {
+      try {
+        const n = await fetchNotifications()
+        setHasUnread(n.some(item => !item.read_at))
+      } catch (err) {
+        console.error('Error fetching notifications', err)
+      }
+    }
+
+    if (isFocused) {
+      checkNotifications()
+    }
+
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active') {
+        checkNotifications()
+      }
+    })
+
+    return () => sub.remove()
+  }, [isFocused])
 
   // Picker de galería
   const pickImage = async () => {
@@ -213,11 +242,12 @@ const uploadPhoto = async () => {
 
             {/* Notificaciones */}
             <TouchableOpacity
-              style={styles.headerIconButton}
+              style={[styles.headerIconButton, { position: 'relative' }]}
               onPress={() => navigation.navigate('Notifications')}
               activeOpacity={0.7}
             >
               <FontAwesome5 name="bell" size={14} color={COLORS.white} />
+              {hasUnread && <View style={styles.notificationDot} />}
             </TouchableOpacity>
 
             {/* Información general */}
